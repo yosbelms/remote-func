@@ -1,0 +1,6 @@
+*.js
+*.js.map
+node_modules/
+.nyc_output/
+shrinkwrap.yaml
+package-lock.json

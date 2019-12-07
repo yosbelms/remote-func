@@ -1,0 +1,46 @@
+{
+  "name": "remote-func",
+  "version": "0.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "pnpx jasmine-ts",
+    "coverage": "pnpm run build && pnpx nyc -e .ts jasmine-ts",
+    "clean": "rm -rf *.js *.js.map spec/*.js spec/*.js.map dev-tools/*.js dev-tools/*.js.map .nyc_output",
+    "build": "tsc -p ./tsconfig.browser.json && tsc -p ./tsconfig.nodejs.json",
+    "watch": "pnpm run clean && pnpx sane 'pnpm run build' --glob='*.ts'"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@types/deep-freeze": "^0.1.2",
+    "@types/koa-compose": "^3.2.5",
+    "@types/node": "^12.12.14",
+    "deep-freeze": "^0.0.1",
+    "globby": "^10.0.1",
+    "koa-compose": "^4.1.0",
+    "make-dir": "^3.0.0",
+    "p-defer": "^3.0.0"
+  },
+  "devDependencies": {
+    "@istanbuljs/nyc-config-typescript": "^0.1.3",
+    "@types/glob": "^7.1.1",
+    "@types/webpack": "^4.41.0",
+    "@types/jasmine": "^3.4.4",
+    "delay": "^4.3.0",
+    "jasmine": "^3.5.0",
+    "jasmine-ts": "^0.3.0",
+    "nyc": "^14.1.1",
+    "rewiremock": "^3.13.9",
+    "sane": "^4.1.0",
+    "ts-node": "^8.5.4",
+    "ts-prune": "^0.3.0",
+    "typescript": "^3.7.3"
+  },
+  "nyc": {
+    "extends": "@istanbuljs/nyc-config-typescript",
+    "all": true,
+    "check-coverage": false,
+    "source-map-support": true
+  }
+}
