@@ -49,6 +49,9 @@
     "ts-prune": "^0.3.0",
     "typescript": "^3.7.3"
   },
+  "engines": {
+    "node" : ">=12"
+  },
   "nyc": {
     "extends": "@istanbuljs/nyc-config-typescript",
     "all": true,
