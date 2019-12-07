@@ -5,7 +5,7 @@ import { Worker as NodeWorker } from 'worker_threads'
 import { secs, mins } from './util'
 import { ErrorType, EvalError, ExitError, RuntimeError, TimeoutError } from './error'
 import { MessageType, RequestMessage, ReturnMessage, ErrorMessage, ExitMessage, ExecuteMessage, } from './message'
-import { serializeApi, callInApi, getApiFromApiModule } from './api'
+import { serializeApi, callInApi, readApiModule } from './api'
 
 class WorkerWrapper<T> {
   private nodeWorker: NodeWorker
@@ -92,7 +92,6 @@ export interface RunnerConfig {
   timeout: number
   filename: string
   allowedModules: string[]
-  runResultMapper: Function
   hashMap: { [k: string]: string }
 }
 
@@ -100,9 +99,12 @@ export class Runner {
   private config: Partial<RunnerConfig>
   private pool: Pool<WorkerWrapper<any>>
   private hashMap: Map<string, string>
-  private middleware: ComposedMiddleware<any>
+  private middlewares: Middleware<any>[]
+  private composedMiddleware?: ComposedMiddleware<any>
 
   constructor(config: Partial<RunnerConfig>) {
+    const apiModule = config.apiModule ? readApiModule(config.apiModule) : void 0
+
     this.config = {
       timeout: secs(10),
       allowedModules: [],
@@ -110,7 +112,7 @@ export class Runner {
       maxWorkers: 5,
       maxWorkersIddleTime: mins(1),
       maxWorkersLifeTime: mins(5),
-      api: Object.create(null),
+      api: apiModule ? apiModule.api : Object.create(null),
       hashMap: {},
       ...config,
     }
@@ -127,7 +129,7 @@ export class Runner {
     } = this.config
 
     this.hashMap = new Map(Object.entries(hashMap || {}))
-    this.middleware = koaCompose(middlewares || [])
+    this.middlewares = middlewares || []
 
     this.pool = new Pool<WorkerWrapper<any>>({
       maxResorces: maxWorkers,
@@ -162,6 +164,11 @@ export class Runner {
         )
       },
     })
+  }
+
+  public use(middleware: Middleware<any>) {
+    this.composedMiddleware = void 0
+    this.middlewares.push(middleware)
   }
 
   private async runInWorker(source: string, args: any[] = [], context?: any, timeout?: number) {
@@ -212,9 +219,11 @@ export class Runner {
     })
   }
 
-  async run(sourceOrHash: string, args?: any[], context?: any, timeout?: number) {
+  async run(sourceOrHash: string, args?: any[], context?: any, timeout?: number): Promise<any> {
     let source = sourceOrHash
-    const { runResultMapper } = this.config
+    if (!this.composedMiddleware) {
+      this.composedMiddleware = koaCompose(this.middlewares)
+    }
 
     if (this.hashMap.size > 0) {
       if (this.hashMap.has(sourceOrHash)) {
@@ -225,8 +234,7 @@ export class Runner {
     }
 
     const next = () => this.runInWorker(source, args, context, timeout)
-    const result = await this.middleware(context, next)
-    return typeof runResultMapper === 'function' ? runResultMapper(result) : result
+    return await this.composedMiddleware(context, next)
   }
 
   destroy() {
@@ -235,9 +243,5 @@ export class Runner {
 }
 
 export const createRunner = (config: Partial<RunnerConfig> = {}): Runner => {
-  const { apiModule } = config
-  if (apiModule) {
-    config.api = getApiFromApiModule(apiModule)
-  }
   return new Runner(config)
 }
