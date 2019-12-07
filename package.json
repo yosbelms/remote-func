@@ -50,7 +50,7 @@
     "typescript": "^3.7.3"
   },
   "engines": {
-    "node" : ">=12"
+    "node": ">=12"
   },
   "nyc": {
     "extends": "@istanbuljs/nyc-config-typescript",
