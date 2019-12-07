@@ -1,8 +1,20 @@
 {
   "name": "remote-func",
   "version": "0.0.0",
-  "description": "",
+  "description": "The same language for your API",
   "main": "index.js",
+  "repository": "https://github.com/yosbelms/remote-func",
+  "keywords": [
+    "api",
+    "graphql",
+    "rest",
+    "node",
+    "nodejs",
+    "microservice",
+    "http",
+    "server",
+    "client"
+  ],
   "scripts": {
     "test": "pnpx jasmine-ts",
     "coverage": "pnpm run build && pnpx nyc -e .ts jasmine-ts",
@@ -10,7 +22,7 @@
     "build": "tsc -p ./tsconfig.browser.json && tsc -p ./tsconfig.nodejs.json",
     "watch": "pnpm run clean && pnpx sane 'pnpm run build' --glob='*.ts'"
   },
-  "author": "",
+  "author": "yosbelms",
   "license": "ISC",
   "dependencies": {
     "@types/deep-freeze": "^0.1.2",
