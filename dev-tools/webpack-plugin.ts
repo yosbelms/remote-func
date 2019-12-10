@@ -3,7 +3,7 @@ import fs from 'fs'
 import path from 'path'
 import makeDir from 'make-dir'
 import { importApiModule } from './import-api'
-import { hashMap, mapToJson, hashMapFileName } from './util'
+import { hashMap, mapToJson } from './util'
 
 const pluginName = 'RemoteFuncWebpackPlugin'
 
@@ -13,7 +13,7 @@ interface ApiConfig {
 }
 
 interface PluginConfig {
-  hashMapDir?: string
+  hashMapPath?: string
   apis?: ApiConfig[]
 }
 
@@ -33,10 +33,10 @@ class WebpackPlugin {
     })
 
     compiler.hooks.afterCompile.tap(pluginName, () => {
-      const { hashMapDir } = this.config
-      if (hashMapDir) {
-        makeDir(path.resolve(hashMapDir)).then(dir => {
-          fs.writeFileSync(path.join(dir, hashMapFileName), mapToJson(hashMap))
+      const { hashMapPath } = this.config
+      if (hashMapPath) {
+        makeDir(path.dirname(path.resolve(hashMapPath))).then(() => {
+          fs.writeFileSync(hashMapPath, mapToJson(hashMap))
         })
       }
     })
