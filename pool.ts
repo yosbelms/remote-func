@@ -69,7 +69,6 @@ export class Pool<T> {
     const garbage: T[] = []
     this.available.forEach(rw => {
       const availableAt = rw.availableAt as number
-      const createdAt = rw.createdAt as number
 
       // iddle
       if ((now - availableAt >= this.config.maxIddleTime)) {
@@ -77,13 +76,17 @@ export class Pool<T> {
       }
 
       // stale
-      if (now - createdAt >= this.config.maxLifeTime) {
+      if (this.isStale(rw)) {
         garbage.push(rw.resource)
       }
     })
 
     // remove garbage
     garbage.forEach(r => this.remove(r))
+  }
+
+  private isStale(rw: ResourceWrapper<T>) {
+    return Date.now() - rw.createdAt >= this.config.maxLifeTime
   }
 
   private findWrapperIdxByResource(list: ResourceWrapper<T>[], resource: T) {
@@ -140,6 +143,11 @@ export class Pool<T> {
       // lend available resource
       if (this.hasAvailableResources() && this.deferredPromisesWaitingForAvailableResource.length) {
         const resourceWrapper = this.available[0]
+        // discard stale resources
+        if (this.isStale(resourceWrapper)) {
+          this.remove(resourceWrapper.resource)
+          continue
+        }
         const canBeAcquired = await beforeAcquire(resourceWrapper.resource)
         if (canBeAcquired !== false) {
           this.available.shift()
@@ -148,6 +156,7 @@ export class Pool<T> {
           const deferredPromise = this.deferredPromisesWaitingForAvailableResource.shift()
           if (deferredPromise) deferredPromise.resolve(resourceWrapper.resource)
         }
+
       } else {
         break
       }
