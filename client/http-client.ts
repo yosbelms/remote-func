@@ -1,10 +1,11 @@
 import { RemoteFunction } from './func'
 
 export interface ClientConfig {
-  url: string
+  url: string,
+  functions: Function[]
 }
 
-export class HttpClient {
+export class Client {
   config: ClientConfig
   constructor(config: Partial<ClientConfig> = {}) {
     let url = 'http://localhost/'
@@ -13,11 +14,14 @@ export class HttpClient {
     }
     this.config = {
       url,
+      functions: [],
       ...config,
     }
+
+    this.registerFunctions(this.config.functions)
   }
 
-  register(functions: any[]) {
+  private registerFunctions(functions: any[]) {
     functions.forEach((fn: RemoteFunction) => {
       if (typeof fn === 'function' && fn.isRemoteFunction) {
         fn.client = this
@@ -40,4 +44,8 @@ export class HttpClient {
     fn.client = client
     return result
   }
+}
+
+export const createClient = (config?: ClientConfig): Client => {
+  return new Client(config)
 }
