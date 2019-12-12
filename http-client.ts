@@ -72,7 +72,7 @@ export const createRemoteFunc = (source: string): RemoteFunction => {
   return remoteFunction
 }
 
-export const $func = (statics: TemplateStringsArray | Function | string) => {
+export const func = (statics: TemplateStringsArray | Function | string) => {
   const source = stringifySourceInput(statics)
   return createRemoteFunc(source)
 }

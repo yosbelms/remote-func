@@ -1,7 +1,14 @@
 import crypto from 'crypto'
 import { hashMap as sharedHashMap } from './util'
+const packageJson = require('../package.json')
 
 const defaultTestRegex = /\.(js|mjs|jsx|ts|tsx)$/
+const funcIdentifier = 'func'
+const moduleName: string = packageJson.name
+
+const refersToModule = (name: string) => {
+  return name === moduleName || name.startsWith(`${moduleName}/`)
+}
 
 const filenamePassTest = (regex: RegExp, filename: string) => {
   return filename && regex.test(filename)
@@ -32,7 +39,19 @@ const defaultTypescriptTranspile = (source: string) => {
 export default ({ types: t }: { types: any }) => {
   return {
     visitor: {
+      ImportSpecifier: (path: any, state: any) => {
+        if (path.node.imported.name === funcIdentifier) {
+          if (refersToModule(path.parent.source.value)) {
+            state.$funcIsImported = true
+          } else {
+            state.$funcIsImported = false
+          }
+        }
+      },
+
       CallExpression: (path: any, state: any) => {
+        if (!state.$funcIsImported) return
+
         const file = state.file
         const filename = file.opts.filename
         const {
@@ -43,10 +62,8 @@ export default ({ types: t }: { types: any }) => {
         } = state.opts
 
         if (!filenamePassTest(test, filename)) return
-
-        const fnTagName = '$func'
         const calleePath = path.get('callee')
-        if (fnTagName === calleePath.node.name) {
+        if (calleePath.node.name === funcIdentifier) {
           const firstArgPath = path.get('arguments.0')
 
           if (t.isFunctionExpression(firstArgPath) || t.isArrowFunctionExpression(firstArgPath)) {
@@ -60,11 +77,6 @@ export default ({ types: t }: { types: any }) => {
 
             // transform
             firstArgPath.replaceWith(t.stringLiteral(sourceOutput))
-
-            // calleePath.replaceWith(t.memberExpression(
-            //   t.cloneDeep(calleePath.node),
-            //   t.identifier('_compiled')
-            // ))
           }
         }
       }
