@@ -72,7 +72,8 @@ export const createRemoteFunc = (source: string): RemoteFunction => {
   return remoteFunction
 }
 
-export const func = (statics: TemplateStringsArray | Function | string) => {
+export function func<T extends Function>(statics: T): T;
+export function func(statics: TemplateStringsArray | Function | string): Function {
   const source = stringifySourceInput(statics)
   return createRemoteFunc(source)
 }
