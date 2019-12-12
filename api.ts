@@ -26,7 +26,11 @@ export const readApiModule = (_module: any): ApiModule => {
     const api = _module[_namespace]
     if (api === void 0) throw new Error(`undefined api '${_namespace}'`)
     const init = typeof _module.default.init === 'function' && _module.default.init
-    return { 'namespace': _namespace, api, init }
+    return {
+      namespace: _namespace,
+      api: { [_namespace]: api },
+      init
+    }
   } else {
     throw new Error(`invalid api module`)
   }
