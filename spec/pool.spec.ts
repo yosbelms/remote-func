@@ -1,5 +1,5 @@
 import 'jasmine'
-import { Pool } from '../pool'
+import { Pool } from '../server/pool'
 import delay from 'delay'
 
 describe('pool', () => {

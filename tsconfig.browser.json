@@ -5,9 +5,9 @@
     "module": "commonjs", /* Specify module code generation: 'none', 'commonjs', 'amd', 'system', 'umd', 'es2015', or 'ESNext'. */
   },
   "exclude": [
-    "./spec"
+    "spec",
   ],
   "include": [
-    "./http-client.ts",
+    "client/**/*.ts"
   ]
 }

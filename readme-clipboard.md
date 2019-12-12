@@ -1,19 +1,32 @@
-# Remote-Func
-### The same language for your API
 
-Remote-func allows to invoke functions that will run in NodeJS HTTP server.
+Server
+```ts
+import express from 'express'
 
-## Overview
+// declare API
+const api = {
+  sum(a, b) {
+    return a + b
+  },
+  sqrt(a) {
+    return a ** 2
+  },
+}
 
-Remote-func is focused on developer experience
+// create server
+const app = express()
 
-A typical server has some API modules containing functions and objects. A typical client will send JavaScript functions that will run in the server side, and receives the result of that execution. Remote-func provides the mechanism by which the server and the client communicate and pass information back and forth.
+// setup server
+setupServer({
+  app,
+  express,
+  runner: createRunner({ api })
+})
 
-## 
+// launch
+app.listen(5000)
 
-There are two primary methods of using Remote-func. The first is for plain JavaScript, the second is for use with Babel and Webpack.
-
-Plain JavaScript
+```
 
 Client
 ```ts
@@ -38,6 +51,42 @@ sumAndSqrt(2).then(result => {
 
 With Babel plugin and TypeScript
 
+API module
+```ts
+// api.ts
+import { declareApiModule } from 'remote-func'
+
+// declare API module
+export default declareApiModule('MyApi')
+export const MyApi = {
+  sum(a, b) {
+    return a + b
+  },
+  sqrt(a) {
+    return a ** 2
+  },
+}
+```
+
+Server
+```ts
+import { createRunner } from 'remote-func'
+import { setupServer } from 'remote-func/http-server'
+import express from 'express'
+// import the whole module
+import * as apiModule from './api'
+
+const app = express()
+
+setupServer({
+  app,
+  express,
+  runner: createRunner({ apiModule })
+})
+
+app.listen(5000)
+```
+
 Client
 ```ts
 import { func } from 'remote-func'
@@ -59,10 +108,3 @@ sumAndSqrt(2).then(result => {
   console.log(result)
 })
 ```
-
-
-
-
-To take advantage of all features including end to end type safety it is recommended to use Remote-func bundled dev tools. Thoug it is not mandatory.
-
-

@@ -1,8 +1,8 @@
-import { createRunner, Runner } from '../runner'
+import { createRunner, Runner } from '../server/runner'
 import 'jasmine'
-import { secs } from '../util'
-import { EvalError, RuntimeError, TimeoutError } from '../error'
-import { withContext } from '../api'
+import { secs } from '../server/util'
+import { EvalError, RuntimeError, TimeoutError } from '../server/error'
+import { withContext } from '../server/api'
 
 describe('runner', () => {
   let runner: Runner

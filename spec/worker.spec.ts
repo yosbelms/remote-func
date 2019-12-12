@@ -1,7 +1,7 @@
 import 'jasmine'
-import { createWorker, WorkerConfig } from '../worker'
+import { createWorker, WorkerConfig } from '../server/worker'
 import { MessageChannel } from 'worker_threads'
-import { MessageType } from '../message'
+import { MessageType } from '../server/message'
 
 const createWorkerPort = (config: Partial<WorkerConfig> = {}) => {
   const { port1, port2 } = new MessageChannel()

@@ -1,4 +1,4 @@
-import { createApiClient, serializeApi, callInApi, SERIALIZED_FUNCTION_TOKEN, WITH_CONTEXT_TOKEN, withContext } from '../api'
+import { createApiClient, serializeApi, callInApi, SERIALIZED_FUNCTION_TOKEN, WITH_CONTEXT_TOKEN, withContext } from '../server/api'
 import 'jasmine'
 
 const api = {

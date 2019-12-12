@@ -19,7 +19,7 @@
     "test": "pnpx jasmine-ts",
     "coverage": "pnpm run build && pnpx nyc -e .ts jasmine-ts",
     "clean": "rm -rf *.js *.js.map spec/*.js spec/*.js.map dev-tools/*.js dev-tools/*.js.map .nyc_output",
-    "build": "tsc -p ./tsconfig.browser.json && tsc -p ./tsconfig.nodejs.json",
+    "build": "tsc -p ./tsconfig.nodejs.json && tsc -p ./tsconfig.browser.json",
     "watch": "pnpm run clean && pnpx sane 'pnpm run build' --glob='*.ts'"
   },
   "author": "yosbelms",
