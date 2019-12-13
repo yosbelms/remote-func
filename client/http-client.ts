@@ -1,8 +1,32 @@
 import { RemoteFunction } from './func'
 
+type RequestFunction = (
+  url: string,
+  headers: { [key: string]: string },
+  source: string,
+  args: any[]
+) => Promise<any>
+
 export interface ClientConfig {
   url: string,
+  headers: { [key: string]: string },
   functions: Function[]
+  request: RequestFunction
+}
+
+export const defaultRequest: RequestFunction = async (
+  url: string,
+  headers: { [key: string]: string },
+  source: string,
+  args: any[],
+) => {
+  const body = JSON.stringify({ source, args })
+  const _headers = {
+    ...headers,
+    'Content-Type': 'application/json',
+  }
+  const response = await fetch(url, { method: 'POST', headers: _headers, body })
+  return response.json()
 }
 
 export class Client {
@@ -15,7 +39,8 @@ export class Client {
     this.config = {
       url,
       functions: [],
-      ...config,
+      request: defaultRequest,
+      ...config as ClientConfig,
     }
 
     this.registerFunctions(this.config.functions)
@@ -30,11 +55,8 @@ export class Client {
   }
 
   async request(source: string, args: any[]) {
-    const { url } = this.config
-    const body = JSON.stringify({ source, args })
-    const headers = { 'Content-Type': 'application/json' }
-    const response = await fetch(url, { method: 'POST', headers, body })
-    return response.json()
+    const { url, headers } = this.config
+    return this.config.request(url, headers, source, args)
   }
 
   call(fn: RemoteFunction, ...args: any[]) {
