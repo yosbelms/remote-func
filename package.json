@@ -2,7 +2,7 @@
   "name": "remote-func",
   "version": "0.0.0",
   "description": "The same language for your API",
-  "main": "index.js",
+  "main": "client/index.js",
   "repository": "https://github.com/yosbelms/remote-func",
   "keywords": [
     "api",
