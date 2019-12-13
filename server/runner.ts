@@ -7,15 +7,15 @@ import { ErrorType, EvalError, ExitError, RuntimeError, TimeoutError } from './e
 import { MessageType, RequestMessage, ReturnMessage, ErrorMessage, ExitMessage, ExecuteMessage, } from './message'
 import { serializeApi, callInApi, readApiModule } from './api'
 
-class WorkerWrapper<T> {
+class WorkerWrapper {
   private nodeWorker: NodeWorker
-  private context?: T
+  private context?: any
 
   constructor(nodeWorker: NodeWorker) {
     this.nodeWorker = nodeWorker
   }
 
-  setContext(ctx: T) {
+  setContext(ctx: any) {
     this.context = ctx
   }
 
@@ -29,8 +29,8 @@ class WorkerWrapper<T> {
 }
 
 const handleMessageFromWorker = (
-  pool: Pool<WorkerWrapper<any>>,
-  workerWrapper: WorkerWrapper<any>,
+  pool: Pool<WorkerWrapper>,
+  workerWrapper: WorkerWrapper,
   api: any,
   resolve: Function,
   reject: Function,
@@ -97,7 +97,7 @@ export interface RunnerConfig {
 
 export class Runner {
   private config: Partial<RunnerConfig>
-  private pool: Pool<WorkerWrapper<any>>
+  private pool: Pool<WorkerWrapper>
   private hashMap: Map<string, string>
   private middlewares: Middleware<any>[]
   private composedMiddleware?: ComposedMiddleware<any>
@@ -106,7 +106,7 @@ export class Runner {
     const apiModule = config.apiModule ? readApiModule(config.apiModule) : void 0
 
     this.config = {
-      timeout: secs(10),
+      timeout: secs(15),
       allowedModules: [],
       middlewares: [],
       maxWorkers: 5,
@@ -131,7 +131,7 @@ export class Runner {
     this.hashMap = new Map(Object.entries(hashMap || {}))
     this.middlewares = middlewares || []
 
-    this.pool = new Pool<WorkerWrapper<any>>({
+    this.pool = new Pool<WorkerWrapper>({
       maxResorces: maxWorkers,
       maxIddleTime: maxWorkersIddleTime,
       maxLifeTime: maxWorkersLifeTime,
@@ -147,11 +147,11 @@ export class Runner {
         return new WorkerWrapper(nodeWorker)
       },
 
-      beforeAvailable(workerWrapper: WorkerWrapper<any>) {
+      beforeAvailable(workerWrapper: WorkerWrapper) {
         workerWrapper.getWorker().removeAllListeners()
       },
 
-      destroy(workerWrapper: WorkerWrapper<any>) {
+      destroy(workerWrapper: WorkerWrapper) {
         const worker = workerWrapper.getWorker()
         return new Promise((resolve, reject) =>
           worker.terminate().then(() => {
@@ -173,7 +173,7 @@ export class Runner {
 
   private async runInWorker(source: string, args: any[] = [], context?: any, timeout?: number) {
     const _timeout = timeout || this.config.timeout
-    const workerWrapper = await this.pool.acquire() as WorkerWrapper<any>
+    const workerWrapper = await this.pool.acquire() as WorkerWrapper
     const worker = workerWrapper.getWorker()
     const { promise, resolve, reject } = pDefer()
 

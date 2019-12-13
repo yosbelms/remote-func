@@ -68,6 +68,6 @@ export class Client {
   }
 }
 
-export const createClient = (config?: ClientConfig): Client => {
+export const createClient = (config?: Partial<ClientConfig>): Client => {
   return new Client(config)
 }
