@@ -119,7 +119,7 @@ export class Worker {
             result: res,
           } as ReturnMessage)
         }).catch(err => {
-          const { message, stack } = err
+          const { message, stack } = err || {}
           this.sendMessage({
             type: MessageType.ERROR,
             errorType: ErrorType.RUNTIME,

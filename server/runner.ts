@@ -1,4 +1,5 @@
 import pDefer from 'p-defer'
+import os from 'os'
 import koaCompose, { Middleware, ComposedMiddleware } from 'koa-compose'
 import { Pool } from './pool'
 import { Worker as NodeWorker } from 'worker_threads'
@@ -109,7 +110,7 @@ export class Runner {
       timeout: secs(15),
       allowedModules: [],
       middlewares: [],
-      maxWorkers: 5,
+      maxWorkers: os.cpus().length,
       maxWorkersIddleTime: mins(1),
       maxWorkersLifeTime: mins(5),
       api: apiModule ? apiModule.api : Object.create(null),

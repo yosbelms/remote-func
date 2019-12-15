@@ -24,12 +24,23 @@ const getHttpStatusFromError = (err: BaseError) => {
 const handleHttpRequest = async (
   runner: Runner,
   method: string,
+  query: any,
   body: any,
   ctx: Context,
 ) => {
-  if (method.toUpperCase() !== 'POST') throw new Error('method not allowed')
+  let payload: Payload
 
-  const payload: Payload = typeof body === 'string' ? JSON.parse(body) : body
+  switch (method.toUpperCase()) {
+    case 'GET':
+      payload = JSON.parse(query.payload)
+      break
+    case 'POST':
+      payload = JSON.parse(body)
+      break
+    default:
+      throw new Error('method not allowed')
+  }
+
   const result = await (runner as Runner).run(
     payload.source || '',
     payload.args,
@@ -48,6 +59,7 @@ const createMiddleware = (
       const result = await handleHttpRequest(
         runner,
         request.method,
+        request.query,
         request.body,
         ctx,
       )
