@@ -35,23 +35,19 @@ const handleHttpRequest = async (
       payload = JSON.parse(query.payload)
       break
     case 'POST':
-      payload = JSON.parse(body)
+      payload = body
       break
     default:
       throw new Error('method not allowed')
   }
 
-  const result = await (runner as Runner).run(
-    payload.source || '',
-    payload.args,
-    ctx,
-  )
+  const result = await runner.run(payload.source || '', payload.args)
 
   return JSON.stringify(result)
 }
 
 const createMiddleware = (
-  runner: Runner = createRunner()
+  runner: Runner = createRunner(),
 ) => {
   return async (request: any, response: any, next: Function) => {
     try {
@@ -77,7 +73,7 @@ export const setupServer = (config: {
   url?: string,
   app: any,
   express: any,
-  runner: Runner
+  runner: Runner,
 }) => {
   const { url, app, express, runner } = config
   app.use(url, [express.json(), createMiddleware(runner)])

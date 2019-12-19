@@ -1,226 +1,55 @@
-import pDefer from 'p-defer'
-import os from 'os'
+import { Script } from 'vm'
+import deepFreeze from 'deep-freeze'
+import delay from 'delay'
 import koaCompose, { Middleware, ComposedMiddleware } from 'koa-compose'
-import { Pool } from './pool'
-import { Worker as NodeWorker } from 'worker_threads'
-import { secs, mins } from './util'
+import { secs, createConsole, mins } from './util'
 import { ErrorType, EvalError, ExitError, RuntimeError, TimeoutError } from './error'
-import { MessageType, RequestMessage, ReturnMessage, ErrorMessage, ExitMessage, ExecuteMessage, } from './message'
 import { serializeApi, callInApi, readApiModule } from './api'
-
-class WorkerWrapper {
-  private nodeWorker: NodeWorker
-  private context?: any
-
-  constructor(nodeWorker: NodeWorker) {
-    this.nodeWorker = nodeWorker
-  }
-
-  setContext(ctx: any) {
-    this.context = ctx
-  }
-
-  getContext() {
-    return this.context
-  }
-
-  getWorker() {
-    return this.nodeWorker
-  }
-}
-
-const handleMessageFromWorker = (
-  pool: Pool<WorkerWrapper>,
-  workerWrapper: WorkerWrapper,
-  api: any,
-  resolve: Function,
-  reject: Function,
-) => (message: any) => {
-  // console.log('RUNNER', message)
-  const worker = workerWrapper.getWorker()
-  switch (message.type) {
-    case MessageType.REQUEST:
-      const { basePath, method, args, id } = message as RequestMessage
-      const context = workerWrapper.getContext()
-      const r = callInApi(api, basePath, method, args, context)
-      Promise.resolve(r).then((result) => {
-        worker.postMessage({ type: MessageType.RESPONSE, id, result })
-      })
-      break
-    case MessageType.RETURN:
-      const { result: res } = message as ReturnMessage
-      resolve(res)
-      if (pool.isAcquired(workerWrapper)) {
-        pool.release(workerWrapper)
-      }
-      break
-    case MessageType.ERROR:
-      const { stack, errorType } = message as ErrorMessage
-      let err: Error = new Error
-
-      switch (errorType) {
-        case ErrorType.EVAL:
-          err = new EvalError(stack)
-          break
-        case ErrorType.RUNTIME:
-          err = new RuntimeError(stack)
-          break
-        case ErrorType.TIMEOUT:
-          err = new TimeoutError(stack)
-          break
-      }
-
-      reject(err)
-      if (pool.isAcquired(workerWrapper)) {
-        pool.release(workerWrapper)
-      }
-      break
-    case MessageType.EXIT:
-      const { code } = message
-      reject(new ExitError(`Worker has ended with code ${code}`))
-      pool.remove(workerWrapper)
-      break
-  }
-}
+import { FunctionCache } from './function-cache'
+import { transform } from './source-processor'
+import { createFunctionRuntime } from './function-runtime'
 
 export interface RunnerConfig {
   apiModule: any
   api: any
   middlewares: Middleware<any>[]
-  maxWorkers: number
-  maxWorkersIddleTime: number
-  maxWorkersLifeTime: number
   timeout: number
   filename: string
-  allowedModules: string[]
   hashMap: { [k: string]: string }
 }
 
 export class Runner {
   private config: Partial<RunnerConfig>
-  private pool: Pool<WorkerWrapper>
+  private functionCache: FunctionCache
   private hashMap: Map<string, string>
   private middlewares: Middleware<any>[]
   private composedMiddleware?: ComposedMiddleware<any>
+  private console: Partial<Console>
 
   constructor(config: Partial<RunnerConfig>) {
     const apiModule = config.apiModule ? readApiModule(config.apiModule) : void 0
 
     this.config = {
       timeout: secs(15),
-      allowedModules: [],
       middlewares: [],
-      maxWorkers: os.cpus().length,
-      maxWorkersIddleTime: mins(1),
-      maxWorkersLifeTime: mins(5),
       api: apiModule ? apiModule.api : Object.create(null),
       hashMap: {},
       ...config,
     }
 
-    const {
-      api,
-      maxWorkers,
-      filename,
-      allowedModules,
-      middlewares,
-      maxWorkersIddleTime,
-      maxWorkersLifeTime,
-      hashMap
-    } = this.config
-
-    this.hashMap = new Map(Object.entries(hashMap || {}))
-    this.middlewares = middlewares || []
-
-    this.pool = new Pool<WorkerWrapper>({
-      maxResorces: maxWorkers,
-      maxIddleTime: maxWorkersIddleTime,
-      maxLifeTime: maxWorkersLifeTime,
-
-      create() {
-        const nodeWorker = new NodeWorker(`${__dirname}/worker.js`, {
-          workerData: {
-            serializedApi: serializeApi(api),
-            filename,
-            allowedModules,
-          }
-        })
-        return new WorkerWrapper(nodeWorker)
-      },
-
-      beforeAvailable(workerWrapper: WorkerWrapper) {
-        workerWrapper.getWorker().removeAllListeners()
-      },
-
-      destroy(workerWrapper: WorkerWrapper) {
-        const worker = workerWrapper.getWorker()
-        return new Promise((resolve, reject) =>
-          worker.terminate().then(() => {
-            resolve()
-            worker.removeAllListeners()
-          }).catch((err) => {
-            worker.removeAllListeners()
-            reject(err)
-          })
-        )
-      },
-    })
+    this.functionCache = new FunctionCache()
+    this.config.api = deepFreeze(this.config.api)
+    this.console = createConsole()
+    this.hashMap = new Map(Object.entries(this.config.hashMap || {}))
+    this.middlewares = []
   }
 
-  public use(middleware: Middleware<any>) {
+  use(middleware: Middleware<any>) {
     this.composedMiddleware = void 0
     this.middlewares.push(middleware)
   }
 
-  private async runInWorker(source: string, args: any[] = [], context?: any, timeout?: number) {
-    const _timeout = timeout || this.config.timeout
-    const workerWrapper = await this.pool.acquire() as WorkerWrapper
-    const worker = workerWrapper.getWorker()
-    const { promise, resolve, reject } = pDefer()
-
-    workerWrapper.setContext(context)
-
-    worker.postMessage({
-      type: MessageType.EXECUTE,
-      source,
-      args,
-    } as ExecuteMessage)
-
-    const _handleMessageFromWorker = handleMessageFromWorker(
-      this.pool,
-      workerWrapper,
-      this.config.api,
-      resolve,
-      reject,
-    )
-
-    worker.on('message', _handleMessageFromWorker)
-    worker.on('error', _handleMessageFromWorker)
-    worker.on('exit', (code) => _handleMessageFromWorker({
-      type: MessageType.EXIT,
-      code
-    } as ExitMessage))
-
-    const timer = setTimeout(() => {
-      const msg = `Timeout after ${_timeout} milliseconds`
-      _handleMessageFromWorker({
-        type: MessageType.ERROR,
-        errorType: ErrorType.TIMEOUT,
-        message: msg,
-        stack: msg,
-      } as ErrorMessage)
-    }, _timeout)
-
-    return promise.then((result) => {
-      clearTimeout(timer)
-      return result
-    }).catch((reason) => {
-      clearTimeout(timer)
-      throw reason
-    })
-  }
-
-  async run(sourceOrHash: string, args?: any[], context?: any, timeout?: number): Promise<any> {
+  async run(sourceOrHash: string, args?: any[], context?: any): Promise<any> {
     let source = sourceOrHash
     if (!this.composedMiddleware) {
       this.composedMiddleware = koaCompose(this.middlewares)
@@ -234,15 +63,179 @@ export class Runner {
       }
     }
 
-    const next = () => this.runInWorker(source, args, context, timeout)
-    return await this.composedMiddleware(context, next)
+    const next = () => this.execute(source, args)
+    return this.composedMiddleware(context, next)
+    // return this.execute(source, args)
   }
 
-  destroy() {
-    return this.pool.destroy()
+  private execute(source: string, args?: any[]) {
+    let fn = this.functionCache.get(source)
+    if (!fn) {
+      try {
+        const trasformedSource = transform(source)
+        console.log(trasformedSource)
+
+        const script = new Script(`'use strict'; exports.default = ${trasformedSource}`, {
+          filename: 'remote-func:vm',
+        })
+
+        const ctx = {
+          ...this.config.api,
+          ...builtInsShadow,
+
+          createFunctionRuntime: proxify(createFunctionRuntime),
+          console: proxify(console),
+
+          // primitive
+          Object: proxify(Object),
+          Date: proxify(Date),
+          Array: proxify(Array),
+          Number: proxify(Number),
+          String: proxify(String),
+
+          // errors
+          Error: proxify(Error),
+          EvalError: proxify(EvalError),
+          RangeError: proxify(RangeError),
+          ReferenceError: proxify(ReferenceError),
+          SyntaxError: proxify(SyntaxError),
+          TypeError: proxify(TypeError),
+          URIError: proxify(URIError),
+
+          // export
+          exports: Object.create(null),
+        }
+
+        script.runInNewContext(ctx, {
+          displayErrors: true,
+          timeout: this.config.timeout,
+          breakOnSigint: true,
+        })
+
+        fn = ctx.exports.default
+        this.functionCache.set(source, fn as Function)
+      } catch (err) {
+        throw err
+      }
+    }
+    return (fn as Function).apply(null, args)
   }
 }
 
 export const createRunner = (config: Partial<RunnerConfig> = {}): Runner => {
   return new Runner(config)
 }
+
+function proxify(event: any): any {
+  return isPrimitive(event) ? event : new Proxy(event, { get: getProp })
+}
+
+function isPrimitive(v: any) {
+  return v == null || (typeof v !== 'function' && typeof v !== 'object')
+}
+
+function getProp(target: any, property: any) {
+  if (property in target) {
+    return proxify(target[property])
+  } else {
+    return proxify({})
+  }
+}
+
+// class PDate {
+//   date: Date
+
+//   constructor(...args: any[]) {
+//     this.date = new Date(args[0])
+//   }
+
+//   toJSON(key?: any) {
+//     return this.date.toJSON(key)
+//   }
+
+//   static now() {
+//     return Date.now()
+//   }
+// }
+
+// deepFreeze(PDate)
+const builtIns = [
+  // JavaScript
+  'Array',
+  'ArrayBuffer',
+  'AsyncFunction',
+  'Atomics',
+  'BigInt',
+  'BigInt64Array',
+  'BigUint64Array',
+  'Boolean',
+  'DataView',
+  'Date',
+  'Error',
+  'EvalError',
+  'Float32Array',
+  'Float64Array',
+  'Function',
+  'Generator',
+  'GeneratorFunction',
+  'Infinity',
+  'Int16Array',
+  'Int32Array',
+  'Int8Array',
+  'InternalError',
+  'Intl',
+  'JSON',
+  'Map',
+  'Math',
+  'NaN',
+  'Number',
+  'Object',
+  'Promise',
+  'Proxy',
+  'RangeError',
+  'ReferenceError',
+  'Reflect',
+  'RegExp',
+  'Set',
+  'SharedArrayBuffer',
+  'String',
+  'Symbol',
+  'SyntaxError',
+  'TypeError',
+  'TypedArray',
+  'URIError',
+  'Uint16Array',
+  'Uint32Array',
+  'Uint8Array',
+  'Uint8ClampedArray',
+  'WeakMap',
+  'WeakSet',
+  'WebAssembly',
+
+  // nodejs
+  'Buffer',
+  '__dirname',
+  '__filename',
+  'clearImmediate',
+  'clearInterval',
+  'clearTimeout',
+  'console',
+  'exports',
+  'global',
+  'module',
+  'process',
+  'queueMicrotask',
+  'require',
+  'setImmediate',
+  'setInterval',
+  'setTimeout',
+  'TextDecoder',
+  'TextEncoder',
+  'URL',
+  'URLSearchParams',
+]
+
+const builtInsShadow = builtIns.reduce((acc: { [k: string]: any }, key) => {
+  acc[key] = null
+  return acc
+}, {})
