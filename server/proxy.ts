@@ -21,7 +21,7 @@ const proxyObj = (Obj: any) => {
     const propValue = Obj[name]
     proxy[name] = typeof propValue === 'function' ? propValue.bind(Obj) : propValue
   })
-  return proxify(proxy)
+  return Object.freeze(proxy)
 }
 
 const builtIns = [
