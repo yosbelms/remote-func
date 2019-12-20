@@ -35,8 +35,7 @@
     "koa-compose": "^4.1.0",
     "make-dir": "^3.0.0",
     "p-defer": "^3.0.0",
-    "p-timeout": "^3.2.0",
-    "vm2": "^3.8.4"
+    "p-timeout": "^3.2.0"
   },
   "devDependencies": {
     "@istanbuljs/nyc-config-typescript": "^0.1.3",

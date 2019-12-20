@@ -8,6 +8,8 @@ import { serializeApi, callInApi, readApiModule } from './api'
 import { FunctionCache } from './function-cache'
 import { transform } from './source-processor'
 import { createFunctionRuntime } from './function-runtime'
+import { proxify, proxies } from './proxy'
+import { createDeflateRaw } from 'zlib'
 
 export interface RunnerConfig {
   apiModule: any
@@ -24,24 +26,23 @@ export class Runner {
   private hashMap: Map<string, string>
   private middlewares: Middleware<any>[]
   private composedMiddleware?: ComposedMiddleware<any>
-  private console: Partial<Console>
+  private api: any
 
   constructor(config: Partial<RunnerConfig>) {
-    const apiModule = config.apiModule ? readApiModule(config.apiModule) : void 0
-
     this.config = {
       timeout: secs(15),
       middlewares: [],
-      api: apiModule ? apiModule.api : Object.create(null),
       hashMap: {},
       ...config,
     }
 
+    const apiModule = config.apiModule ? readApiModule(config.apiModule) : void 0
+
     this.functionCache = new FunctionCache()
-    this.config.api = deepFreeze(this.config.api)
-    this.console = createConsole()
+    // this.config.api = deepFreeze(this.config.api)
     this.hashMap = new Map(Object.entries(this.config.hashMap || {}))
     this.middlewares = []
+    this.api = deepFreeze(apiModule ? apiModule.api : this.config.api)
   }
 
   use(middleware: Middleware<any>) {
@@ -63,46 +64,22 @@ export class Runner {
       }
     }
 
-    const next = () => this.execute(source, args)
-    return this.composedMiddleware(context, next)
-    // return this.execute(source, args)
+    return this.composedMiddleware(context, () => this.execute(source, args))
   }
 
   private execute(source: string, args?: any[]) {
     let fn = this.functionCache.get(source)
     if (!fn) {
       try {
-        const trasformedSource = transform(source)
-        console.log(trasformedSource)
-
-        const script = new Script(`'use strict'; exports.default = ${trasformedSource}`, {
+        const { code } = transform(source)
+        const script = new Script(`exports.default = ${code};`, {
           filename: 'remote-func:vm',
         })
 
         const ctx = {
-          ...this.config.api,
-          ...builtInsShadow,
-
+          ...this.api,
+          ...proxies,
           createFunctionRuntime: proxify(createFunctionRuntime),
-          console: proxify(console),
-
-          // primitive
-          Object: proxify(Object),
-          Date: proxify(Date),
-          Array: proxify(Array),
-          Number: proxify(Number),
-          String: proxify(String),
-
-          // errors
-          Error: proxify(Error),
-          EvalError: proxify(EvalError),
-          RangeError: proxify(RangeError),
-          ReferenceError: proxify(ReferenceError),
-          SyntaxError: proxify(SyntaxError),
-          TypeError: proxify(TypeError),
-          URIError: proxify(URIError),
-
-          // export
           exports: Object.create(null),
         }
 
@@ -125,117 +102,3 @@ export class Runner {
 export const createRunner = (config: Partial<RunnerConfig> = {}): Runner => {
   return new Runner(config)
 }
-
-function proxify(event: any): any {
-  return isPrimitive(event) ? event : new Proxy(event, { get: getProp })
-}
-
-function isPrimitive(v: any) {
-  return v == null || (typeof v !== 'function' && typeof v !== 'object')
-}
-
-function getProp(target: any, property: any) {
-  if (property in target) {
-    return proxify(target[property])
-  } else {
-    return proxify({})
-  }
-}
-
-// class PDate {
-//   date: Date
-
-//   constructor(...args: any[]) {
-//     this.date = new Date(args[0])
-//   }
-
-//   toJSON(key?: any) {
-//     return this.date.toJSON(key)
-//   }
-
-//   static now() {
-//     return Date.now()
-//   }
-// }
-
-// deepFreeze(PDate)
-const builtIns = [
-  // JavaScript
-  'Array',
-  'ArrayBuffer',
-  'AsyncFunction',
-  'Atomics',
-  'BigInt',
-  'BigInt64Array',
-  'BigUint64Array',
-  'Boolean',
-  'DataView',
-  'Date',
-  'Error',
-  'EvalError',
-  'Float32Array',
-  'Float64Array',
-  'Function',
-  'Generator',
-  'GeneratorFunction',
-  'Infinity',
-  'Int16Array',
-  'Int32Array',
-  'Int8Array',
-  'InternalError',
-  'Intl',
-  'JSON',
-  'Map',
-  'Math',
-  'NaN',
-  'Number',
-  'Object',
-  'Promise',
-  'Proxy',
-  'RangeError',
-  'ReferenceError',
-  'Reflect',
-  'RegExp',
-  'Set',
-  'SharedArrayBuffer',
-  'String',
-  'Symbol',
-  'SyntaxError',
-  'TypeError',
-  'TypedArray',
-  'URIError',
-  'Uint16Array',
-  'Uint32Array',
-  'Uint8Array',
-  'Uint8ClampedArray',
-  'WeakMap',
-  'WeakSet',
-  'WebAssembly',
-
-  // nodejs
-  'Buffer',
-  '__dirname',
-  '__filename',
-  'clearImmediate',
-  'clearInterval',
-  'clearTimeout',
-  'console',
-  'exports',
-  'global',
-  'module',
-  'process',
-  'queueMicrotask',
-  'require',
-  'setImmediate',
-  'setInterval',
-  'setTimeout',
-  'TextDecoder',
-  'TextEncoder',
-  'URL',
-  'URLSearchParams',
-]
-
-const builtInsShadow = builtIns.reduce((acc: { [k: string]: any }, key) => {
-  acc[key] = null
-  return acc
-}, {})

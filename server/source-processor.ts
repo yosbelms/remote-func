@@ -5,7 +5,7 @@ export const transform = (src: string, timeout: number = 1000) => {
   const out = babel.transform(src, {
     plugins: [sourceProcessorPlugin]
   })
-  return out.code
+  return out
 }
 
 const getParentFunctionNode = (t: any, path: any) => {
