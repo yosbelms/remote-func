@@ -1,25 +1,29 @@
-const isPrimitive = (v: any) => {
-  return v == null || (typeof v !== 'function' && typeof v !== 'object')
-}
+import { isFunction, isPrimitive } from 'util'
 
-const getProp = (target: any, property: any) => {
+const getProxyProp = (target: any, property: any) => {
   if (property in target) {
-    return proxify(target[property])
+    return proxifyDeep(target[property])
   } else {
-    return proxify({})
+    return proxifyDeep({})
   }
 }
 
-export const proxify = (event: any): any => {
-  return isPrimitive(event) ? event : new Proxy(event, { get: getProp })
+export const proxifyDeep = (event: any): any => {
+  return isPrimitive(event) ? event : new Proxy(event, { get: getProxyProp })
 }
 
-const proxyObj = (Obj: any) => {
-  const proxy: any = typeof Obj === 'function' ? (...args: any[]) => Obj(...args) : {}
+const bannedPropNames = ['name', 'length', 'prototype']
+const isBannedProperty = (propName: string) => !!bannedPropNames.find(n => n === propName)
+
+const proxify = (Obj: any) => {
+  const proxy: any = (isFunction(Obj)
+    ? (...args: any[]) => Obj(...args)
+    : {}
+  )
   Object.getOwnPropertyNames(Obj).forEach((name: string) => {
-    if (['name', 'length', 'prototype'].find(v => v === name)) return
+    if (isBannedProperty(name)) return
     const propValue = Obj[name]
-    proxy[name] = typeof propValue === 'function' ? propValue.bind(Obj) : propValue
+    proxy[name] = isFunction(propValue) ? propValue.bind(Obj) : propValue
   })
   return Object.freeze(proxy)
 }
@@ -105,28 +109,29 @@ const builtInsShadow = builtIns.reduce((acc: { [k: string]: any }, key) => {
   return acc
 }, {})
 
+export const createModuleContextProxies = () => {
+  return {
+    ...builtInsShadow,
 
-export const proxies = {
-  ...builtInsShadow,
+    Promise: proxify(Promise),
 
-  Promise: proxyObj(Promise),
+    console: proxify(console),
 
-  console: proxyObj(console),
+    Object: proxify(Object),
+    Date: proxify(Date),
+    Array: proxify(Array),
+    Number: proxify(Number),
+    String: proxify(String),
 
-  Object: proxyObj(Object),
-  Date: proxyObj(Date),
-  Array: proxyObj(Array),
-  Number: proxyObj(Number),
-  String: proxyObj(String),
-
-  // errors
-  Error: proxyObj(Error),
-  EvalError: proxyObj(EvalError),
-  RangeError: proxyObj(RangeError),
-  ReferenceError: proxyObj(ReferenceError),
-  SyntaxError: proxyObj(SyntaxError),
-  TypeError: proxyObj(TypeError),
-  URIError: proxyObj(URIError),
+    // errors
+    Error: proxify(Error),
+    EvalError: proxify(EvalError),
+    RangeError: proxify(RangeError),
+    ReferenceError: proxify(ReferenceError),
+    SyntaxError: proxify(SyntaxError),
+    TypeError: proxify(TypeError),
+    URIError: proxify(URIError),
+  }
 }
 
 // export const proxies = {
@@ -134,20 +139,20 @@ export const proxies = {
 
 //   Promise: PromiseProxy,
 
-//   console: proxify(console),
+//   console: proxifyDeep(console),
 
-//   Object: proxify(Object),
-//   Date: proxify(Date),
-//   Array: proxify(Array),
-//   Number: proxify(Number),
-//   String: proxify(String),
+//   Object: proxifyDeep(Object),
+//   Date: proxifyDeep(Date),
+//   Array: proxifyDeep(Array),
+//   Number: proxifyDeep(Number),
+//   String: proxifyDeep(String),
 
 //   // errors
-//   Error: proxify(Error),
-//   EvalError: proxify(EvalError),
-//   RangeError: proxify(RangeError),
-//   ReferenceError: proxify(ReferenceError),
-//   SyntaxError: proxify(SyntaxError),
-//   TypeError: proxify(TypeError),
-//   URIError: proxify(URIError),
+//   Error: proxifyDeep(Error),
+//   EvalError: proxifyDeep(EvalError),
+//   RangeError: proxifyDeep(RangeError),
+//   ReferenceError: proxifyDeep(ReferenceError),
+//   SyntaxError: proxifyDeep(SyntaxError),
+//   TypeError: proxifyDeep(TypeError),
+//   URIError: proxifyDeep(URIError),
 // }

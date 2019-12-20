@@ -1,15 +1,13 @@
 import { Script } from 'vm'
 import deepFreeze from 'deep-freeze'
-import delay from 'delay'
 import koaCompose, { Middleware, ComposedMiddleware } from 'koa-compose'
-import { secs, createConsole, mins } from './util'
-import { ErrorType, EvalError, ExitError, RuntimeError, TimeoutError } from './error'
-import { serializeApi, callInApi, readApiModule } from './api'
+import { secs } from './util'
+import { EvalError } from './error'
+import { readApiModule } from './api'
 import { FunctionCache } from './function-cache'
-import { transform } from './source-processor'
+import { transform } from './function-tranform'
 import { createFunctionRuntime } from './function-runtime'
-import { proxify, proxies } from './proxy'
-import { createDeflateRaw } from 'zlib'
+import { proxifyDeep, createModuleContextProxies } from './proxy'
 
 export interface RunnerConfig {
   apiModule: any
@@ -78,8 +76,8 @@ export class Runner {
 
         const ctx = {
           ...this.api,
-          ...proxies,
-          createFunctionRuntime: proxify(createFunctionRuntime),
+          ...createModuleContextProxies(),
+          createFunctionRuntime: proxifyDeep(createFunctionRuntime),
           exports: Object.create(null),
         }
 

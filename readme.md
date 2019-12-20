@@ -1,7 +1,7 @@
 # Remote-Func
 ### The same language for your API
 
-Remote-func allows to invoke functions that will run in NodeJS HTTP server.
+Remote-func allows to use the same laguage of front-end, and back-end, to query you APIs.
 
 ## Overview
 

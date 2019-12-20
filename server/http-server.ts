@@ -41,7 +41,7 @@ const handleHttpRequest = async (
       throw new Error('method not allowed')
   }
 
-  const result = await runner.run(payload.source || '', payload.args)
+  const result = await runner.run(payload.source || '', payload.args, ctx)
 
   return JSON.stringify(result)
 }
