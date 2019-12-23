@@ -2,6 +2,7 @@ import { mins, secs } from './util'
 
 export interface FunctionCacheEntry {
   fn: Function
+  gcable: boolean
   createdAt: number
   usedAt: number
 }
@@ -30,6 +31,7 @@ export class FunctionCache {
     let count = 0
 
     for (let [key, entry] of Object.entries(this.map)) {
+      if (!entry.gcable) continue
       if (count >= idxToStartRemoval) {
         // extra
         garbageKeys.push(key)
@@ -52,10 +54,11 @@ export class FunctionCache {
     }
   }
 
-  set(key: string, fn: Function) {
+  set(key: string, fn: Function, gcable?: boolean = true) {
     const now = Date.now()
     return this.map.set(key, {
       fn,
+      gcable,
       createdAt: now,
       usedAt: now
     })

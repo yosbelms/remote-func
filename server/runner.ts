@@ -37,7 +37,6 @@ export class Runner {
     const apiModule = config.apiModule ? readApiModule(config.apiModule) : void 0
 
     this.functionCache = new FunctionCache()
-    // this.config.api = deepFreeze(this.config.api)
     this.hashMap = new Map(Object.entries(this.config.hashMap || {}))
     this.middlewares = []
     this.api = deepFreeze(apiModule ? apiModule.api : this.config.api)
