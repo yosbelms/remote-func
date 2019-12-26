@@ -1,10 +1,17 @@
 import crypto from 'crypto'
+import terser from 'terser'
 import { hashMap as sharedHashMap } from './util'
 const packageJson = require('../package.json')
 
 const defaultTestRegex = /\.(js|mjs|jsx|ts|tsx)$/
 const funcIdentifier = 'func'
 const moduleName: string = packageJson.name
+
+const isProduction = () => {
+  const { BABEL_ENV, NODE_ENV } = process.env
+  const p = 'production'
+  return BABEL_ENV === p || NODE_ENV === p
+}
 
 const refersToModule = (name: string) => {
   return name === moduleName || name.startsWith(`${moduleName}/`)
@@ -70,9 +77,17 @@ export default ({ types: t }: { types: any }) => {
             const source = firstArgPath.getSource()
             const transpiled = transpile(source).trim()
 
-            let sourceOutput = hashSource ? sha1(transpiled) : transpiled
+            let sourceOutput: string = hashSource ? sha1(transpiled) : transpiled
             if (hashMap) {
               hashMap.set(sourceOutput, transpiled)
+            }
+
+            if (!hashSource && isProduction()) {
+              // becuase terser doesn't compiles qhen the input code is  async () => ...
+              // so we add a prefix and remove after minify
+              sourceOutput = `x=${sourceOutput}`
+              sourceOutput = String(terser.minify(sourceOutput).code)
+              sourceOutput = sourceOutput.substr(sourceOutput.indexOf('=') + 1)
             }
 
             // transform

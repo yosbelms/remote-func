@@ -4,12 +4,12 @@ type RequestFunction = (
   url: string,
   headers: { [key: string]: string },
   source: string,
-  args: any[]
+  args: any[],
 ) => Promise<any>
 
 export interface ClientConfig {
-  url: string,
-  headers: { [key: string]: string },
+  url: string
+  headers: { [key: string]: string }
   functions: Function[]
   request: RequestFunction
 }

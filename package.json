@@ -31,10 +31,10 @@
     "@types/node": "^12.12.14",
     "babel-core": "^6.26.3",
     "deep-freeze": "0.0.1",
-    "delay": "^4.3.0",
     "globby": "^10.0.1",
     "koa-compose": "^4.1.0",
-    "make-dir": "^3.0.0"
+    "make-dir": "^3.0.0",
+    "terser": "^4.4.3"
   },
   "devDependencies": {
     "@istanbuljs/nyc-config-typescript": "^0.1.3",

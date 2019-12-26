@@ -1,4 +1,3 @@
-import delay from 'delay'
 import { mins } from './util'
 import { RuntimeError } from './error'
 
@@ -38,6 +37,7 @@ export class FunctionRuntime {
 
   checkSync() {
     if (this.runtimeError) this.throwRuntimeError()
+
     const now = Date.now()
     const { maxSyncRunningTime, maxRunningTime } = this.config
     if (
@@ -51,59 +51,29 @@ export class FunctionRuntime {
 
   checkAsync() {
     if (this.runtimeError) this.throwRuntimeError()
+
+    let ret
     const now = Date.now()
-    const { maxRunningTime } = this.config
+    const { maxRunningTime, maxSyncRunningTime } = this.config
     if (now - this.beginTimestamp > maxRunningTime) {
       this.throwRuntimeError()
     }
+
+    if (now - this.lastAsyncCheckTimestamp > maxSyncRunningTime) {
+      ret = schedule()
+    }
+
     this.lastAsyncCheckTimestamp = now
     this.lastCheck = CheckType.Async
-    return delay(0)
+
+    return ret
   }
+}
+
+const schedule = () => {
+  return new Promise(resolve => setImmediate(resolve))
 }
 
 export const createFunctionRuntime = (config: Partial<FunctionRuntimeConfig>) => {
   return new FunctionRuntime(config)
 }
-
-// export const createRuntime = () => {
-//   const beginTimestamp = Date.now()
-//   const maxRunningTime = mins(10)
-//   const maxSyncRunningTime = 100
-
-//   let runtimeError: Error | void = void 0
-//   let lastAsyncCheckTimestamp = beginTimestamp
-//   let lastCheck: CheckType = CheckType.Async
-
-//   const throwRuntimeError = () => {
-//     runtimeError = new RuntimeError('Timeout')
-//     throw runtimeError
-//   }
-
-//   return {
-
-//     checkSync() {
-//       if (runtimeError) throwRuntimeError()
-//       const now = Date.now()
-//       if (
-//         lastCheck === CheckType.Sync
-//         && ((now - lastAsyncCheckTimestamp > maxSyncRunningTime) || (now - beginTimestamp > maxRunningTime))
-//       ) {
-//         throwRuntimeError()
-//       }
-//       lastCheck = CheckType.Sync
-//     },
-
-//     checkAsync() {
-//       if (runtimeError) throwRuntimeError()
-//       const now = Date.now()
-//       if (now - beginTimestamp > maxRunningTime) {
-//         throwRuntimeError()
-//       }
-//       lastAsyncCheckTimestamp = now
-//       lastCheck = CheckType.Async
-//       return delay(0)
-//     }
-
-//   }
-// }
