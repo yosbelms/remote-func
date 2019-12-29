@@ -3,7 +3,7 @@ import deepFreeze from 'deep-freeze'
 import koaCompose, { Middleware, ComposedMiddleware } from 'koa-compose'
 import { secs } from './util'
 import { EvalError } from './error'
-import { readApiModule } from './api'
+import { readApiModule, ApiModule } from './api'
 import { FunctionCache } from './function-cache'
 import { transform } from './function-tranform'
 import { createFunctionRuntime } from './function-runtime'
@@ -25,6 +25,7 @@ export class Runner {
   private middlewares: Middleware<any>[]
   private composedMiddleware?: ComposedMiddleware<any>
   private api: any
+  private apiModule?: ApiModule
 
   constructor(config: Partial<RunnerConfig>) {
     this.config = {
@@ -35,6 +36,7 @@ export class Runner {
     }
 
     const apiModule = config.apiModule ? readApiModule(config.apiModule) : void 0
+    this.apiModule = apiModule
 
     this.functionCache = new FunctionCache()
     this.hashMap = new Map(Object.entries(this.config.hashMap || {}))
@@ -45,6 +47,10 @@ export class Runner {
   use(middleware: Middleware<any>) {
     this.composedMiddleware = void 0
     this.middlewares.push(middleware)
+  }
+
+  getApiModule() {
+    return this.apiModule
   }
 
   async run(sourceOrHash: string, args?: any[], context?: any): Promise<any> {

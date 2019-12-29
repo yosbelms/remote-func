@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>browser-amd-editor</title>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8">
+</head>
+
+<body>
+
+  <h2>Monaco Editor Sample</h2>
+  <div id="container" style="width:800px;height:600px;border:1px solid grey"></div>
+
+  <script src="/playground/apiDts.js"></script>
+  <!-- OR ANY OTHER AMD LOADER HERE INSTEAD OF loader.js -->
+  <script src="/node_modules/monaco-editor/min/vs/loader.js"></script>
+  <script>
+    require.config({
+      paths: {
+        'vs': '../node_modules/monaco-editor/min/vs'
+      }
+    })
+
+    require(['vs/editor/editor.main'], () => {
+      var tsDefaults = monaco.languages.typescript.typescriptDefaults
+
+      // validation settings
+      tsDefaults.setDiagnosticsOptions({
+        noSemanticValidation: false,
+        noSyntaxValidation: false
+      })
+
+      // compiler options
+      tsDefaults.setCompilerOptions({
+        target: monaco.languages.typescript.ScriptTarget.ES2017,
+        allowNonTsExtensions: true
+      })
+
+      // cretate declare module
+      const path = window.apiModule.path.replace('.ts', '')
+      apiDts[`/api.d.ts`] = `
+      export { ${apiModule.namespace} } from '${path}';
+      declare function func<T extends Function>(statics: T): T;
+      `
+
+      Object.keys(window.apiDts).forEach(path => {
+        tsDefaults.addExtraLib(window.apiDts[path], path)
+      })
+
+      const editorValue = [
+        'import { func } from \'remote-func/client\'',
+        'import { LabServer } from \'/api\'',
+        '',
+        'const test = func(async () => {',
+        '',
+        '})',
+        '',
+        'test()',
+      ].join('\n')
+
+      // ---- start ---- //
+
+      monaco.editor.create(document.getElementById('container'), {
+        value: editorValue,
+        language: 'typescript',
+        theme: 'vs-dark',
+        fontSize: 14,
+        minimap: {
+          enabled: false
+        }
+      })
+
+      // var x = 'import {${apiModule?.namespace} as _} from "${apiModulePath.replace('.ts', '')}"; declare const ${apiModule?.namespace}: typeof ${apiModule?.namespace};'
+
+      // fetch('../node_modules/typescript/lib/lib.es2015.d.ts').then(r => r.text()).then(function (response) {
+      // 	//monaco.languages.typescript.javascriptDefaults.addExtraLib(response.responseText, 'ts:lib.es2015.d.ts');
+      // })
+    })
+  </script>
+</body>
+
+</html>

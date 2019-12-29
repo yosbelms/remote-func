@@ -1,5 +1,7 @@
 import { Runner, createRunner } from './runner'
 import { BaseError, ErrorType } from './error'
+import { compileDtsInMemory } from '../playground/compile'
+import * as ts from 'typescript'
 
 export interface Context {
   request: any
@@ -74,8 +76,34 @@ export const setupServer = (config: {
   app: any,
   express: any,
   runner: Runner,
+  apiModulePath: string
 }) => {
-  const { url, app, express, runner } = config
+  const { url, app, express, runner, apiModulePath } = config
   app.use(url, [express.json(), createMiddleware(runner)])
+
+  // prepare d.ts
+  const compiledApiDts = compileDtsInMemory([apiModulePath], {
+    target: ts.ScriptTarget.ES2017,
+  })
+
+  const apiDts: any = {}
+  Object.keys(compiledApiDts).forEach(key => {
+    const src = compiledApiDts[key]
+    apiDts[key.replace('.js', '.d.ts')] = src
+  })
+
+  const apiModule = runner.getApiModule()
+  // console.log(apiDts)
+  app.use('/', express.static(__dirname + '/../'))
+  app.use('/playground/apiDts.js', (_: any, response: any) => {
+    response.send(`
+      window.apiModule = {
+        'namespace': '${apiModule?.namespace}',
+        'path': '${apiModulePath}',
+      }
+      window.apiDts = ${JSON.stringify(apiDts)}
+    `)
+  })
+
   return app
 }

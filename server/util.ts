@@ -18,3 +18,14 @@ export const deepMap = (obj: any, callback: Function, basePath: string[] = []) =
   }
   return result
 }
+
+export const sharedStart = (array: string[]) => {
+  const orderedList = [...array].sort()
+  const a1 = orderedList[0]
+  const a2 = orderedList[orderedList.length - 1]
+  const L = a1.length
+  let i = 0
+
+  while (i < L && a1.charAt(i) === a2.charAt(i)) i++
+  return a1.substring(0, i)
+}
