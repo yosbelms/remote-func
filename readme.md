@@ -1,68 +1,51 @@
 # Remote-Func
 ### The same language for your API
 
-Remote-func allows to invoke functions that will run in NodeJS HTTP server.
+Remote-func allows use TypeScript/JavaScript as the query language of your APIs.
 
 ## Overview
 
-Remote-func is focused on developer experience
-
-A typical server has some API modules containing functions and objects. A typical client will send JavaScript functions that will run in the server side, and receives the result of that execution. Remote-func provides the mechanism by which the server and the client communicate and pass information back and forth.
-
-## 
-
-There are two primary methods of using Remote-func. The first is for plain JavaScript, the second is for use with Babel and Webpack.
+Remote-func is focused on developer experience. There are two primary methods of using Remote-func. The first is for plain JavaScript, the second is for use with Babel (which supports TypeScript) allowing type safety between client and server sides.
 
 Plain JavaScript
-
-Client
 ```ts
-import { func } from 'remote-func'
-import { Client } from 'remote-func/http-client'
+import { func } from 'remote-func/client'
 
-const client = new Client({ url: 'http://localhost:5000' })
-
-// declare server side function
-const sumAndSqrt = func`async (a, b) {
-  const s = await sum(a, b)
-  return await sqrt(s)
+const getArticleWithComments = func`async (slug) {
+  const article = await BlogApi.getArticle(slug)
+  article.comments = await BlogApi.getComments(article.id)
+  return article
 }`
 
-client.register([sumAndSqrt])
-
-// execute
-sumAndSqrt(2).then(result => {
-  console.log(result)
-})
+getArticleWithComments(2).then(...)
 ```
 
 With Babel plugin and TypeScript
-
-Client
 ```ts
-import { func } from 'remote-func'
-import { Client } from 'remote-func/http-client'
-import { MyAapi } from './imported-apis/api'
+import { func } from 'remote-func/client'
+import { BlogApi } from './imported-apis/api'
 
-const client = new Client({ url: 'http://localhost:5000' })
-
-// declare server side function
-const sumAndSqrt = func(async (a, b) => {
-  const s = await MyAapi.sum(a, b)
-  return await MyAapi.sqrt(s)
+const getArticleWithComments = func(async (slug: string) => {
+  const article = await BlogApi.getArticle(slug)
+  article.comments = await BlogApi.getComments(article.id)
+  return article
 })
 
-client.register([sumAndSqrt])
+getArticleWithComments(2).then(...)
+```
+Using Remote-func bundled dev tools allow to take advantage of end to end type safety, and IDE intellisense. Though it is not mandatory.
 
-// execute
-sumAndSqrt(2).then(result => {
-  console.log(result)
-})
+## Install
+
+```
+npm i remote-func
 ```
 
+## Docs
 
+- [Usage with plain JavaScript](https://github.com/yosbelms/remote-func/blob/master/docs/usage-with-plain-js.md)
+- [Usage with Babel and TypeScript](https://github.com/yosbelms/remote-func/blob/master/docs/usage-with-babel.md)
+- [Remote functions](https://github.com/yosbelms/remote-func/blob/master/docs.md)
+- [API endpoints](https://github.com/yosbelms/remote-func/blob/master/api-endpoints.md)
 
-
-To take advantage of all features including end to end type safety it is recommended to use Remote-func bundled dev tools. Thoug it is not mandatory.
-
-
+MIT (c) 2019-present Yosbel Marin

@@ -2,9 +2,8 @@ import fs from 'fs'
 import path from 'path'
 import globby from 'globby'
 import makeDir from 'make-dir'
-import ts from 'typescript'
 
-export const importApiModule = async (apiModulePath: string, destinationDir: string) => {
+export const importApiModuleDts = async (apiModulePath: string, destinationDir: string) => {
   const dstDir = await makeDir(path.resolve(destinationDir))
 
   compile([apiModulePath], {
@@ -28,7 +27,13 @@ export const importApiModule = async (apiModulePath: string, destinationDir: str
   })
 }
 
-const compile = (fileNames: string[], options: ts.CompilerOptions): void => {
+const compile = (fileNames: string[], options: any): void => {
+  let ts: any
+  try {
+    ts = require('typescript')
+  } catch (_) {
+    throw new Error('Please add TypeScript as dependency')
+  }
   let program = ts.createProgram(fileNames, options)
   let emitResult = program.emit()
 
@@ -36,7 +41,7 @@ const compile = (fileNames: string[], options: ts.CompilerOptions): void => {
     .getPreEmitDiagnostics(program)
     .concat(emitResult.diagnostics)
 
-  allDiagnostics.forEach((diagnostic: ts.Diagnostic) => {
+  allDiagnostics.forEach((diagnostic: any) => {
     if (diagnostic.file) {
       let { line, character } = diagnostic.file.getLineAndCharacterOfPosition(diagnostic.start!)
       let message = ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n')
@@ -46,4 +51,3 @@ const compile = (fileNames: string[], options: ts.CompilerOptions): void => {
     }
   })
 }
-

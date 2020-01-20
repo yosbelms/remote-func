@@ -1,9 +1,11 @@
-import { deepMap, getProp, isFunction } from './util'
 import { Runner } from './runner'
+import { isFunction, deepMap, deepClone, isObject, isString, DeepClone } from './util'
 
 export const SERIALIZED_FUNCTION_TOKEN = '@@token/function'
-export const WITH_CONTEXT_TOKEN = '@@token/with-context'
-export const API_MODULE_TOKEN = '@@toker/api-module'
+export const ENDPOINT_TOKEN = '@@token/endpoint'
+export const API_MODULE_TOKEN = '@@token/api-module'
+
+export type Result<T> = DeepClone<T>
 
 export interface ApiModule {
   namespace: string
@@ -19,16 +21,30 @@ export const declareApiModule = (namespace: string, init?: (runner: Runner) => v
   } as unknown as void
 }
 
-export const readApiModule = (_module: any): ApiModule => {
-  if (_module && _module.default && _module.default.API_MODULE_TOKEN === API_MODULE_TOKEN) {
-    const _namespace = _module.default.namespace
-    if (typeof _namespace !== 'string') throw new Error(`invalid namespace '${_namespace}'`)
-    const api = _module[_namespace]
-    if (api === void 0) throw new Error(`undefined api '${_namespace}'`)
-    const init = typeof _module.default.init === 'function' && _module.default.init
+const isApiModuleDeclaration = (modDeclaration: any) => {
+  return (
+    isObject(modDeclaration)
+    && modDeclaration.API_MODULE_TOKEN === API_MODULE_TOKEN
+    && isString(modDeclaration.namespace)
+  )
+}
+
+export const isApiModule = (mod: any) => {
+  return (
+    mod
+    && mod.default
+    && isApiModuleDeclaration(mod.default)
+  )
+}
+
+export const readApiModule = (mod: any): ApiModule => {
+  if (isApiModule(mod)) {
+    const ns = mod.default.namespace
+    const api = mod[ns]
+    const init = isFunction(mod.default.init) && mod.default.init
     return {
-      namespace: _namespace,
-      api: { [_namespace]: api },
+      namespace: ns,
+      api: { [ns]: api },
       init
     }
   } else {
@@ -36,42 +52,26 @@ export const readApiModule = (_module: any): ApiModule => {
   }
 }
 
-export const withContext = <C, F>(fn: (ctx: C) => F) => {
-  (fn as any)[WITH_CONTEXT_TOKEN] = true
+export const endpoint = <C, F extends Function>(fn: (ctx: C) => F) => {
+  (fn as any)[ENDPOINT_TOKEN] = true
   return fn as unknown as F
 }
 
-export const serializeApi = (api: Object) => {
-  return deepMap(api, (value: any) => {
-    if (isFunction(value)) return SERIALIZED_FUNCTION_TOKEN
-    return value
-  })
+export const isEndpoint = (fn: Function) => {
+  return (fn as any)[ENDPOINT_TOKEN]
 }
 
-export const createApiClient = (api: any, createClient: Function) => {
-  return deepMap(api, (value: any, key: any, basePath: string[]) => {
-    return (value === SERIALIZED_FUNCTION_TOKEN
-      ? createClient(key, basePath)
-      : value
-    )
-  })
-}
+export const contextifyApi = <T>(api: T, context?: any): T => {
+  return deepMap(api, (propValue, container) => {
+    if (isFunction(propValue)) {
+      let fn = propValue.bind(container)
 
-export const callInApi = (
-  api: Object,
-  basePath: string[],
-  method: string,
-  args: any[] = [],
-  ctx?: any
-) => {
-  const prop = getProp(api, basePath)
-  if (isFunction(prop[method])) {
-    let fn = prop[method]
-    if (fn[WITH_CONTEXT_TOKEN]) {
-      fn = fn(ctx)
-      if (!isFunction(fn)) throw new Error('invalid function with context')
+      if (isEndpoint(propValue)) {
+        fn = fn(context)
+      }
+
+      return (...args: any[]) => deepClone(fn(...args))
     }
-    return fn(...args)
-  }
-  throw new TypeError(`${basePath.join('.')}.${method} is not a function`)
+    return propValue
+  })
 }

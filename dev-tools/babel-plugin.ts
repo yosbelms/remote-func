@@ -1,10 +1,15 @@
-import crypto from 'crypto'
-import { hashMap as sharedHashMap } from './util'
+import terser from 'terser'
 const packageJson = require('../package.json')
 
 const defaultTestRegex = /\.(js|mjs|jsx|ts|tsx)$/
 const funcIdentifier = 'func'
 const moduleName: string = packageJson.name
+
+const isProduction = () => {
+  const { BABEL_ENV, NODE_ENV } = process.env
+  const p = 'production'
+  return BABEL_ENV === p || NODE_ENV === p
+}
 
 const refersToModule = (name: string) => {
   return name === moduleName || name.startsWith(`${moduleName}/`)
@@ -14,17 +19,16 @@ const filenamePassTest = (regex: RegExp, filename: string) => {
   return filename && regex.test(filename)
 }
 
-const sha1 = (txt: string) => {
-  return (crypto
-    .createHash('sha1')
-    .update(txt)
-    .digest('hex')
-  )
-}
+const identity = (a: any) => a
 
 const defaultTypescriptTranspile = (source: string) => {
   try {
-    const ts = require('typescript')
+    let ts
+    try {
+      ts = require('typescript')
+    } catch (_) {
+      throw new Error('Please add TypeScript as dependency')
+    }
     const transpileOutput = ts.transpileModule(source, {
       compilerOptions: {
         target: ts.ScriptTarget.ES2017,
@@ -58,7 +62,7 @@ export default ({ types: t }: { types: any }) => {
           transpile = defaultTypescriptTranspile,
           test = defaultTestRegex,
           hashSource,
-          hashMap = sharedHashMap,
+          transform = identity,
         } = state.opts
 
         if (!filenamePassTest(test, filename)) return
@@ -69,10 +73,14 @@ export default ({ types: t }: { types: any }) => {
           if (t.isFunctionExpression(firstArgPath) || t.isArrowFunctionExpression(firstArgPath)) {
             const source = firstArgPath.getSource()
             const transpiled = transpile(source).trim()
+            let sourceOutput: string = transform(transpiled)
 
-            let sourceOutput = hashSource ? sha1(transpiled) : transpiled
-            if (hashMap) {
-              hashMap.set(sourceOutput, transpiled)
+            if (isProduction()) {
+              // because terser doesn't compiles when the input code is  async () => ...
+              // so we add a prefix and remove after minify
+              sourceOutput = `x=${sourceOutput}`
+              sourceOutput = String(terser.minify(sourceOutput).code)
+              sourceOutput = sourceOutput.substr(sourceOutput.indexOf('=') + 1)
             }
 
             // transform

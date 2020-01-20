@@ -21,15 +21,20 @@ const createRemoteFunc = (source: string): RemoteFunction => {
   const remoteFunction: RemoteFunction = (...args: any[]): any => {
     const client = remoteFunction.client
     if (client) return client.request(source, args)
-    throw new Error('no bound client')
+    throw new Error('RemoteFunction not registered to a client')
   }
   remoteFunction.isRemoteFunction = true
   remoteFunction.source = source
   return remoteFunction
 }
 
-export function func<T extends Function>(statics: T): T;
-export function func(statics: TemplateStringsArray | Function | string): Function {
+export interface Func {
+  <T extends Function>(fn: T): T
+  (tsa: TemplateStringsArray): Function
+  (str: string): Function
+}
+
+export const func: Func = (statics: TemplateStringsArray | Function | string): Function => {
   const source = stringifySourceInput(statics)
   return createRemoteFunc(source)
 }

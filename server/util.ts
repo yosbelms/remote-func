@@ -1,41 +1,74 @@
-import deepFreeze from 'deep-freeze'
-
-export const isObject = (obj: any) => typeof obj === 'object' && obj !== null
-export const isFunction = (fn: any) => typeof fn === 'function'
 export const identity = (a: any) => a
 export const noop = () => { }
 export const secs = (s: number) => s * 1000
 export const mins = (m: number) => secs(m) * 60
 
-export const deepMap = (obj: any, callback: Function, basePath: string[] = []) => {
+export const isObject = (obj: any) => typeof obj === 'object' && obj !== null
+export const isFunction = (fn: any) => typeof fn === 'function'
+export const isPrimitive = (v: any) => v == null || (!isFunction(v) && !isObject('object'))
+export const isThenable = (v: any) => v && isFunction(v.then)
+export const isArray = Array.isArray.bind(Array)
+export const isString = (v: any) => typeof v === 'string'
+
+export const deepMap = (
+  obj: any,
+  mapperFunction: (value: any, container: any) => any,
+) => {
   const result: any = {}
   for (const [key, value] of Object.entries(obj)) {
     if (isObject(value) || Array.isArray(value)) {
-      result[key] = deepMap(value, callback, [...basePath, key])
+      result[key] = deepMap(value, mapperFunction)
     } else {
-      result[key] = callback(value, key, [...basePath])
+      result[key] = mapperFunction(value, obj)
     }
   }
   return result
 }
 
-export const getProp = (obj: any, path: string[], forEach: Function = noop) => {
-  let current = obj
-  for (let i = 0; i < path.length; i++) {
-    if (current === void 0) return
-    forEach(current)
-    current = current[path[i]]
-  }
-  return current
-}
+export type DeepClone<T> = (
+  T extends Function ? never :
+  T extends (number | string | boolean | symbol | null | undefined | Date) ? T :
+  T extends { [prop: string]: any, toJSON(...args: any[]): infer R } ? R :
+  T extends Promise<infer R> ? Promise<DeepClone<R>> :
+  { [P in keyof T]: DeepClone<T[P]> }
+)
 
-export const createConsole = () => {
-  const orignalConsole: any = console
-  const _console: { [key: string]: Function } = {}
-  for (const [key, value] of Object.entries(console)) {
-    if (typeof value === 'function') {
-      _console[key] = (...args: any[]) => orignalConsole[key](...args)
+export const deepClone = <T, R extends DeepClone<T>>(o: T): R => {
+  // if not array or object or is null return self
+  if (isFunction(o)) return void 0 as R
+  if (!isObject(o)) return o as R
+
+  // date
+  if (o instanceof Date) {
+    return new Date(o.getTime()) as R
+  }
+
+  // toJSON
+  if (isFunction((o as any).toJSON)) {
+    o = (o as any).toJSON()
+  }
+
+  // promise
+  if (isThenable(o)) {
+    return (o as any).then((o: any) => deepClone(o))
+  }
+
+  // array
+  if (isArray(o)) {
+    let len = o.length
+    let newO = []
+    for (let i = 0; i < len; i++) {
+      newO[i] = deepClone(o[i])
+    }
+    return newO as R
+  }
+
+  // object
+  let newO: any = {}
+  for (let propName in o) {
+    if ((o as Object).hasOwnProperty(propName)) {
+      newO[propName] = deepClone(o[propName])
     }
   }
-  return deepFreeze(_console)
+  return newO as R
 }
