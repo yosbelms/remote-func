@@ -62,3 +62,27 @@ const articleWithComments = func(async(slug: string) => {
   return article
 })
 ```
+
+
+## Return type
+
+All values returned by endpoints are deep cloned (API Isolation in remote-func docs). Hence, function values are not removed from the final result. To avoid TypeScript false positives, there is a generic type names `Result` to cover the correct type transformation of cloned endpoint returned values. Example:
+
+```ts
+import { Result } from 'remote-func/server'
+
+class User {
+  name: string
+  getName() {
+    return this.name
+  }
+}
+
+const MyApi = {
+  getUser(): Result<User> {
+    return new User()
+  }
+}
+```
+
+In that way, when use `MyApi.getUser` from Remote-func client, the `getName` method will be inexistent for TypeScript.
