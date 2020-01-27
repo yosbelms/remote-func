@@ -1,9 +1,20 @@
->**Not ready for production**
+**Not ready for production**
 
 # Remote-Func
 ### JavaScript as the query language for your API
 
 Remote-func allows use TypeScript/JavaScript as the query language of your APIs.
+
+## Key features
+
+- Twice faster than GraphQL.
+- JavaScript as the query language.
+- Fetch multiple resources at once.
+- Allows to reduce data before sending the response to the client.
+- Batch and deduplicate requests.
+- Stream data from server to client in a single HTTP response, and dispatch in the order of arrival.
+- End-to-end type safety when used with TypeScript.
+- Independence between frontend and backend.
 
 ## Overview
 
