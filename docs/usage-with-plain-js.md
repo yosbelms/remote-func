@@ -60,7 +60,7 @@ export const getArticleWithComments = func`async (slug) => {
 }`
 ```
 
-Remote functions needs to be registered in a Remote-func client make it work.
+Remote functions needs to be bound to a Remote-func client.
 
 **Create client**
 
@@ -68,23 +68,18 @@ Remote functions needs to be registered in a Remote-func client make it work.
 import { createClient } from 'remote-func/client'
 import { getArticleWithComments } from './articles'
 
-createClient({
-  url: 'http://localhost:5000/',
-  functions: [
-    getArticleWithComments
-  ]
-})
+createClient({ url: 'http://localhost:5000/' }).bind([
+  getArticleWithComments
+])
 ```
 
-Also you can spread the entire module into `functions`, this is a convenient way that will only register remote functions existing in the module, and ignore the rest.
+Also can bind all the remote functions exported by a module, using the spread operator, this is a convenient way that will only bind remote functions existing in the module, and ignore the rest.
 
 ```ts
 import * as articles from './articles'
-createClient({
-  functions: [
-    ...articles
-  ]
-})
+createClient().bind([
+  ...articles
+])
 ```
 
 Now you are ready to query your API using a remote function, example:

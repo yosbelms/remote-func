@@ -14,7 +14,6 @@ type Fetch = (
 
 export interface ClientConfig {
   url: string
-  functions: Function[]
   dedupe: boolean
   fetch: Fetch
 }
@@ -95,7 +94,6 @@ export class Client {
     }
     this.config = {
       url,
-      functions: [],
       dedupe: true,
       fetch: globalFetch,
       ...config as ClientConfig,
@@ -105,16 +103,6 @@ export class Client {
     this.batchedRequests = []
     this.batchedRequestsDeferredPromises = []
     this.requestPromiseDedupeMap = new Map()
-
-    this.registerFunctions(this.config.functions)
-  }
-
-  private registerFunctions(functions: any[]) {
-    functions.forEach((fn: RemoteFunction) => {
-      if (typeof fn === 'function' && fn.isRemoteFunction) {
-        fn.client = this
-      }
-    })
   }
 
   request(source: string, args: any[]): Promise<ResponseMessage> {
@@ -179,6 +167,14 @@ export class Client {
 
   useBatch(useBatch: boolean) {
     this.isUsingBatch = useBatch
+  }
+
+  bind(functions: any[]) {
+    functions.forEach((fn: RemoteFunction) => {
+      if (typeof fn === 'function' && fn.isRemoteFunction) {
+        fn.client = this
+      }
+    })
   }
 
   call(fn: RemoteFunction, ...args: any[]) {

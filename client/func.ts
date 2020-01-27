@@ -21,7 +21,7 @@ const createRemoteFunc = (source: string): RemoteFunction => {
   const remoteFunction: RemoteFunction = (...args: any[]): any => {
     const client = remoteFunction.client
     if (client) return client.request(source, args)
-    throw new Error('RemoteFunction not registered to a client')
+    throw new Error('RemoteFunction not bound to a client')
   }
   remoteFunction.isRemoteFunction = true
   remoteFunction.source = source

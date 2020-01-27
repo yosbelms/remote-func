@@ -1,4 +1,4 @@
-import { isFunction, isPrimitive } from 'util'
+import { isFunction, isPrimitive } from './util'
 
 const getProxyProp = (target: any, property: any) => {
   if (property in target) {

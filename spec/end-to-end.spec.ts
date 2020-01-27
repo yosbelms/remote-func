@@ -23,8 +23,9 @@ describe('End to End', () => {
     createClient({
       url: `http://localhost:${port}/`,
       fetch: fetch as any,
-      functions: [rFunc],
-    })
+    }).bind([
+      rFunc
+    ])
     expect(await rFunc()).toBe(api.one())
   })
 
@@ -35,8 +36,9 @@ describe('End to End', () => {
       fetch: (url: string, { headers, body }) => {
         return fetch(`${url}?requests=${encodeURIComponent(body)}`, { method: 'GET', headers })
       },
-      functions: [rFunc],
-    })
+    }).bind([
+      rFunc
+    ])
     expect(await rFunc()).toBe(api.one())
   })
 })
