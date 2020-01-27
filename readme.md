@@ -47,7 +47,7 @@ npm i remote-func
 
 - [Usage with plain JavaScript](https://github.com/yosbelms/remote-func/blob/master/docs/usage-with-plain-js.md)
 - [Usage with Babel and TypeScript](https://github.com/yosbelms/remote-func/blob/master/docs/usage-with-babel.md)
-- [Remote functions](https://github.com/yosbelms/remote-func/blob/master/docs.md)
-- [API endpoints](https://github.com/yosbelms/remote-func/blob/master/api-endpoints.md)
+- [Remote function](https://github.com/yosbelms/remote-func/blob/master/docs/remote-function.md)
+- [API endpoints](https://github.com/yosbelms/remote-func/blob/master/docs/api-endpoints.md)
 
 MIT (c) 2019-present Yosbel Marin
