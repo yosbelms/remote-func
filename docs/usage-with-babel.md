@@ -48,18 +48,20 @@ That's it, now we have created a Remote-func API server mounted in path `/`, and
 
 **Configure Babel Plugin**
 
-In order to take advantage of IDE intellisense, and type safety, it is necessary to setup the bundled Babel plugin located at `remote-func/dev-tools/babel-plugin`. See [Babel docs](https://babeljs.io/docs/en/plugins/#plugin-preset-paths) for how to use plugins.
+In order to take advantage of IDE intellisense, and type safety, it is necessary to setup the bundled Babel plugin located at `remote-func/dev-tools/babel-plugin`. See [Babel docs](https://babeljs.io/docs/en/plugins/#plugin-preset-paths) for how to setup plugins properly.
 
 **Import API d.ts**
 
-Create a `.js` or a `.ts`(if you are using `ts-node`) anywhere in your project with the following content:
+TypeScript needs to know about your API types to compile. Remote-func ships a tool to extract type definitions an generate `.js` stub files to allow TypeScript validate client code.
+
+Start by creating a `.js` or a `.ts`(if you are using `ts-node`) anywhere in your project with the following content:
 
 ```ts
 import { importApiModuleDts } from 'remote-func/dev-tools/import-api-dts'
-importApiModuleDts('path/to/blog-api.ts', 'path/to/destination/dir/')
+importApiModuleDts('path/to/blog-api.ts', 'path/to/client/destination/dir/')
 ```
 
-After run it using `node` CLI, you should have type descriptors(`.d.ts`) files corresponding your API module. At this point you can import the exported value of the API module from the client side, let's continue.
+After run it using `node` CLI, you should have type descriptors(`.d.ts`) files corresponding your API module in the specified directory. At this point you can import the API module from the client.
 
 ### Remote functions
 
@@ -83,18 +85,18 @@ export const getArticleWithComments = func(async (slug: string) => {
 })
 ```
 
-Remote functions needs to be registered in a Remote-func client make it work.
+Remote functions needs to be registered in a Remote-func client to make it work.
 
 **Create client**
 
 ```ts
 import { createClient } from 'remote-func/client'
-import * as articles from './articles'
+import { getArticleWithComments } from './articles'
 
 createClient({
   url: 'http://localhost:5000/',
   functions: [
-    articles.getArticleWithComments
+    getArticleWithComments
   ]
 })
 ```

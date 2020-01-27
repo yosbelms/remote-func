@@ -47,7 +47,7 @@ A remote function is a function that will be executed by a Remote-func server. O
 
 import { func } from 'remote-func/client'
 
-export const getArticleWithComments = func(`async (slug) => {
+export const getArticleWithComments = func`async (slug) => {
   // request block
   const article = await BlogApi.getArticle(slug)
   const comments = await BlogApi.getComments(article.id)
@@ -57,7 +57,7 @@ export const getArticleWithComments = func(`async (slug) => {
     ...article,
     comments: comments,
   }
-}`)
+}`
 ```
 
 Remote functions needs to be registered in a Remote-func client make it work.
@@ -66,12 +66,12 @@ Remote functions needs to be registered in a Remote-func client make it work.
 
 ```ts
 import { createClient } from 'remote-func/client'
-import * as articles from './articles'
+import { getArticleWithComments } from './articles'
 
 createClient({
   url: 'http://localhost:5000/',
   functions: [
-    articles.getArticleWithComments
+    getArticleWithComments
   ]
 })
 ```
