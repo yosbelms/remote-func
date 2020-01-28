@@ -52,8 +52,9 @@ const handleHttpRequest = (
       const ctx: RequestContext = { headers, method, query, source, args }
       const resultPromise = runner.run(source || '', args, ctx).then(result => {
         strigifier.write({ index, result })
-      }).catch(error => {
-        strigifier.write({ index, error })
+      }).catch((err = {}) => {
+        const { stack } = err
+        strigifier.write({ index, error: stack || err })
       })
       resultPromises.push(resultPromise)
     },
