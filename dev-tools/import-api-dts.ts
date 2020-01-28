@@ -7,6 +7,9 @@ export const importApiModuleDts = async (apiModulePath: string, destinationDir: 
   const dstDir = await makeDir(path.resolve(destinationDir))
 
   compile([apiModulePath], {
+    target: 'ES2019',
+    lib: ['lib.es2019.full.d.ts'],
+    strict: false,
     declaration: true,
     allowJs: true,
     emitDeclarationOnly: true,

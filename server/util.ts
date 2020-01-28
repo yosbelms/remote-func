@@ -33,24 +33,24 @@ export type DeepClone<T> = (
   { [P in keyof T]: DeepClone<T[P]> }
 )
 
-export const deepClone = <T, R extends DeepClone<T>>(o: T): R => {
+export const deepClone = <T extends any, R extends DeepClone<T>>(o: T): R => {
   // if not array or object or is null return self
   if (isFunction(o)) return void 0 as R
   if (!isObject(o)) return o as R
 
   // date
-  if (o instanceof Date) {
+  if ((o as any) instanceof Date) {
     return new Date(o.getTime()) as R
   }
 
   // toJSON
-  if (isFunction((o as any).toJSON)) {
-    o = (o as any).toJSON()
+  if (isFunction(o.toJSON)) {
+    o = o.toJSON()
   }
 
   // promise
   if (isThenable(o)) {
-    return (o as any).then((o: any) => deepClone(o))
+    return o.then((o: any) => deepClone(o))
   }
 
   // array
