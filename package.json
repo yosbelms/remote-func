@@ -20,7 +20,8 @@
     "coverage": "npm run build && npx nyc -e .ts jasmine-ts",
     "clean": "rm -rf *.js *.js.map spec/*.js spec/*.js.map dev-tools/*.js dev-tools/*.js.map client/*.js client/*.js.map server/*.js server/*.js.map .nyc_output",
     "build": "tsc -p ./tsconfig.nodejs.json && tsc -p ./tsconfig.browser.json",
-    "watch": "npm run clean && npx sane 'npm run build' --glob='*.ts'"
+    "watch": "npm run clean && npx sane 'npm run build' --glob='*.ts'",
+    "prepublish": "npm run clean && npm run build && npm run test"
   },
   "author": "yosbelms",
   "license": "ISC",
