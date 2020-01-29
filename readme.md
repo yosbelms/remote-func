@@ -18,7 +18,7 @@ Remote-func allows use TypeScript/JavaScript as the query language of your APIs.
 
 ## Overview
 
-Remote-func is focused on developer experience. There are two primary methods of using Remote-func. The first is for plain JavaScript, the second is for use with Babel (which supports TypeScript) allowing type safety between client and server sides.
+Remote-func is a TypeScript library focused on developer experience. There are two primary methods of using Remote-func. The first is for plain JavaScript, the second is for use with Babel (which supports TypeScript) allowing type safety between client and server sides.
 
 Plain JavaScript
 ```ts
