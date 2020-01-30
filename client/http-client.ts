@@ -18,6 +18,13 @@ export interface ClientConfig {
   fetch: Fetch
 }
 
+export interface BatchConfig {
+  timeout: number
+  sizeLimit: number
+}
+
+const MAX_BATCH_SIZE_LIMIT = 1000
+
 const supportsWebStreams = (
   typeof (global as any).ReadableStream !== 'undefined'
   && typeof (global as any).TextDecoder !== 'undefined'
@@ -80,10 +87,11 @@ const handleFetchResponse = supportsWebStreams ? handleFetchStreamResponse : han
 export class Client {
   private config: ClientConfig
   private isUsingBatch: boolean
-  private batchLimit: number
   private batchedRequests: RequestMessage[]
   private batchedRequestsDeferredPromises: DeferredPromise<any>[]
   private requestPromiseDedupeMap: Map<string, Promise<ResponseMessage>>
+  private batchConfig?: BatchConfig
+  private batchScheduleTimeout?: any
 
   constructor(config: Partial<ClientConfig> = {}) {
     let url = 'http://localhost/'
@@ -99,10 +107,20 @@ export class Client {
       ...config as ClientConfig,
     }
     this.isUsingBatch = false
-    this.batchLimit = 1000
     this.batchedRequests = []
     this.batchedRequestsDeferredPromises = []
     this.requestPromiseDedupeMap = new Map()
+  }
+
+  private unscheduleBatch() {
+    clearTimeout(this.batchScheduleTimeout)
+    this.batchScheduleTimeout = void 0
+  }
+
+  private scheduleBatch(timeout?: number) {
+    this.unscheduleBatch()
+    let schedule = Number(timeout) >= 0 ? (fn: any) => setTimeout(fn, timeout) : () => Infinity
+    this.batchScheduleTimeout = (schedule as Function)(this.flush.bind(this))
   }
 
   request(source: string, args: any[]): Promise<ResponseMessage> {
@@ -126,7 +144,14 @@ export class Client {
       this.requestPromiseDedupeMap.set(dedupeKey, deferredPromise.promise)
     }
 
-    if (!this.isUsingBatch || this.batchedRequests.length >= this.batchLimit) {
+    if (this.isUsingBatch) {
+      const sizeLimit = Math.min(Number(this.batchConfig?.sizeLimit), MAX_BATCH_SIZE_LIMIT)
+      if (this.batchedRequests.length >= sizeLimit) {
+        this.flush()
+      } else if (this.batchScheduleTimeout === void 0) {
+        this.scheduleBatch(this.batchConfig?.timeout)
+      }
+    } else {
       this.flush()
     }
 
@@ -141,6 +166,7 @@ export class Client {
 
   flush() {
     if (this.batchedRequests.length === 0) return
+    this.unscheduleBatch()
 
     const { url, fetch } = this.config
     const requests = this.batchedRequests
@@ -165,8 +191,15 @@ export class Client {
     })
   }
 
-  useBatch(useBatch: boolean) {
-    this.isUsingBatch = useBatch
+  useBatch(config: Partial<BatchConfig> | boolean) {
+    this.flush()
+    this.isUsingBatch = !!config
+    config = typeof config === 'boolean' ? {} : config
+    this.batchConfig = {
+      timeout: -1,
+      sizeLimit: MAX_BATCH_SIZE_LIMIT,
+      ...config,
+    }
   }
 
   bind(functions: any[]) {

@@ -1,4 +1,4 @@
-**Not ready for production**
+**Work in progress**
 
 # Remote-Func
 ### JavaScript as the query language for your API
