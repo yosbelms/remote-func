@@ -15,43 +15,42 @@ export const createParser = <T>(options: Partial<{
     onClose = noop,
   } = options
 
-  let buffer = ''
+  let remaining = ''
   let closed = false
-  const delimiterLen = delimiter.length
 
   const throwIfClosed = () => {
     if (closed) throw new Error('Parser closed')
   }
 
+  const handleChunk = (str: string) => {
+    try {
+      const data = JSON.parse(str)
+      onData(data, str)
+    } catch (err) {
+      onError(err, str)
+    }
+  }
+
   return {
     write(partial: string) {
       throwIfClosed()
-
-      let ptr
-      let buf = buffer + String(partial)
-
-      while ((ptr = buf.indexOf(delimiter)) >= 0) {
-        if (ptr == 0) {
-          buf = buf.slice(delimiterLen)
-          continue
+      const chunks = String(partial).split(delimiter)
+      const lastChunkIdx = chunks.length - 1
+      chunks.forEach((chunk, idx) => {
+        remaining = remaining + chunk
+        if (idx < lastChunkIdx) {
+          handleChunk(remaining)
+          remaining = ''
         }
-
-        try {
-          const str = buf.slice(0, ptr)
-          const data = JSON.parse(str)
-          onData(data, str)
-        } catch (err) {
-          onError(err, buf)
-        }
-
-        buf = buf.slice(ptr + 1)
-      }
-
-      buffer = buf
+      })
     },
 
     close() {
-      onClose(buffer)
+      const chunkLen = remaining.trim().length
+      if (chunkLen > 0) {
+        handleChunk(remaining)
+      }
+      onClose(remaining)
     }
   }
 }

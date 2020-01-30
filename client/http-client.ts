@@ -39,8 +39,8 @@ const handleResponse = (deferredPromises: DeferredPromise<any>[]) => (resp: Resp
   }
 }
 
-const handleResponseError = (err: any, buf: any) => {
-  console.log(err, buf)
+const handleResponseError = (err: any, str: string) => {
+  console.log(err + str)
 }
 
 const handleFetchStreamResponse = (
