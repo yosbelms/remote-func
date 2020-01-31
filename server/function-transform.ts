@@ -54,6 +54,9 @@ const screateSourceProcessorPlugin = (timeout: number) => {
         FunctionExpression: (path: any) => {
           throw path.buildCodeFrameError('Expected ArrowFunction')
         },
+        NewExpression: (path: any) => {
+          throw path.buildCodeFrameError('Unknown new keyword')
+        },
 
         ForStatement: (path: any, state: any) => handleLoop(t, path, state, timeout),
         WhileStatement: (path: any, state: any) => handleLoop(t, path, state, timeout),
