@@ -82,7 +82,10 @@ const handleFetchNoStreamResponse = (
   }
 }
 
-const handleFetchResponse = supportsWebStreams ? handleFetchStreamResponse : handleFetchNoStreamResponse
+const handleFetchResponse = (supportsWebStreams
+  ? handleFetchStreamResponse
+  : handleFetchNoStreamResponse
+)
 
 export class Client {
   private config: ClientConfig
