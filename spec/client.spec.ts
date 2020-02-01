@@ -1,5 +1,5 @@
 import 'jasmine'
-import { createClient, func, Client } from '../client'
+import { createClient, func, Client, bind } from '../client'
 import delay from 'delay'
 
 describe('Client', () => {
@@ -12,18 +12,16 @@ describe('Client', () => {
     beforeEach(() => {
       fetchCallCount = 0
       rFuncCallCount = 0
-      const rFunc = func`async () => 1`
-      rFuncWrap = () => {
-        rFuncCallCount++
-        return rFunc()
-      }
       client = createClient({
         dedupe: false,
         fetch: async () => fetchCallCount++,
       })
-      client.bind([
-        rFunc,
-      ])
+
+      const rFunc = bind(client, func`async () => 1`)
+      rFuncWrap = () => {
+        rFuncCallCount++
+        return rFunc()
+      }
     })
 
     it('should flush when call flush, and keep batching', async () => {

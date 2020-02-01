@@ -1,6 +1,6 @@
 import 'jasmine'
 import { createRunner, setupExpressServer, Result } from '../server'
-import { createClient, func } from '../client'
+import { createClient, func, bind } from '../client'
 import fetch from 'node-fetch'
 
 const port = 7000
@@ -19,26 +19,24 @@ describe('End to End', () => {
   })
 
   it('should execute functions in the server', async () => {
-    const rFunc = func(`async () => one()`)
-    createClient({
+    const client = createClient({
       url: `http://localhost:${port}/`,
       fetch: fetch as any,
-    }).bind([
-      rFunc
-    ])
+    })
+    const rFunc = bind(client, func(`async () => one()`))
+
     expect(await rFunc()).toBe(api.one())
   })
 
   it('should execute functions in the server using GET', async () => {
-    const rFunc = func(`async () => one()`)
-    createClient({
+    const client = createClient({
       url: `http://localhost:${port}/`,
       fetch: (url: string, { headers, body }) => {
         return fetch(`${url}?requests=${encodeURIComponent(body)}`, { method: 'GET', headers })
       },
-    }).bind([
-      rFunc
-    ])
+    })
+    const rFunc = bind(client, func(`async () => one()`))
+
     expect(await rFunc()).toBe(api.one())
   })
 })

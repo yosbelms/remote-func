@@ -1,5 +1,4 @@
 import pDefer, { DeferredPromise } from 'p-defer'
-import { RemoteFunction } from './func'
 import { createParser, createStringifier } from './json-stream'
 import { RequestMessage, ResponseMessage } from './message'
 
@@ -203,22 +202,6 @@ export class Client {
       sizeLimit: MAX_BATCH_SIZE_LIMIT,
       ...config,
     }
-  }
-
-  bind(functions: any[]) {
-    functions.forEach((fn: RemoteFunction) => {
-      if (typeof fn === 'function' && fn.isRemoteFunction) {
-        fn.client = this
-      }
-    })
-  }
-
-  call(fn: RemoteFunction, ...args: any[]) {
-    const client = fn.client
-    fn.client = this
-    const result = fn.apply(null, args)
-    fn.client = client
-    return result
   }
 }
 

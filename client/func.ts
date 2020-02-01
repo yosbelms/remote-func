@@ -7,6 +7,11 @@ export interface RemoteFunction extends Function {
   isRemoteFunction: boolean
   client?: Client
   source?: string
+  bound: boolean
+}
+
+export interface BoundRemoteFunction extends Function {
+  remoteFunction: RemoteFunction
 }
 
 const stringifySourceInput = (statics: TemplateStringsArray | Function | string): string => {
@@ -18,23 +23,38 @@ const stringifySourceInput = (statics: TemplateStringsArray | Function | string)
 }
 
 const createRemoteFunc = (source: string): RemoteFunction => {
-  const remoteFunction: RemoteFunction = (...args: any[]): any => {
-    const client = remoteFunction.client
-    if (client) return client.request(source, args)
-    throw new Error('RemoteFunction not bound to a client')
+  const remoteFunction = () => {
+    throw new Error('Unbound remote function')
   }
   remoteFunction.isRemoteFunction = true
   remoteFunction.source = source
-  return remoteFunction
+  remoteFunction.bound = false
+  return remoteFunction as RemoteFunction
 }
 
 export interface Func {
   <T extends Function>(fn: T): T
-  (tsa: TemplateStringsArray): Function
-  (str: string): Function
+  (tsa: TemplateStringsArray): RemoteFunction
+  (str: string): RemoteFunction
 }
 
-export const func: Func = (statics: TemplateStringsArray | Function | string): Function => {
+export const func: Func = (statics: TemplateStringsArray | Function | string): RemoteFunction => {
   const source = stringifySourceInput(statics)
   return createRemoteFunc(source)
+}
+
+export const bind = (client: Client, remoteFunction: RemoteFunction): BoundRemoteFunction => {
+  if (!client) {
+    throw new Error('Invalid client')
+  }
+  if (!remoteFunction || !remoteFunction.isRemoteFunction) {
+    throw new Error('Invalid remote function')
+  }
+  if (remoteFunction.bound) {
+    throw new Error('Remote function already bound')
+  }
+  const source = remoteFunction.source as string
+  const boundRemoteFunction = (...args: any[]) => client.request(source, args)
+  boundRemoteFunction.remoteFunction = remoteFunction
+  return boundRemoteFunction as BoundRemoteFunction
 }
