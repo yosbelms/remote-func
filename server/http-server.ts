@@ -9,6 +9,7 @@ export interface RequestContext {
   headers: any
   method: string
   query: any
+  cookies: any
   source: string
   args: any[]
 }
@@ -27,6 +28,7 @@ const handleHttpRequest = (
   headers: any,
   method: string,
   query: any,
+  cookies: any,
   body: any,
   write: (data: any) => void,
 ) => {
@@ -49,7 +51,7 @@ const handleHttpRequest = (
   const parser = createParser<RequestMessage>({
     onData(data: RequestMessage) {
       const { index, source, args } = data
-      const ctx: RequestContext = { headers, method, query, source, args }
+      const ctx: RequestContext = { headers, method, query, cookies, source, args }
       const resultPromise = runner.run(source || '', args, ctx).then(result => {
         strigifier.write({ index, result })
       }).catch((err = {}) => {
@@ -66,6 +68,7 @@ const handleHttpRequest = (
   })
 
   parser.write(requests)
+  strigifier.close()
   parser.close()
   return pSettle(resultPromises)
 }
@@ -82,13 +85,21 @@ const createMiddleware = (
         response.set('Transfer-Encoding', 'chunked')
       }
 
+      const write = (data: any) => {
+        if (response.finished || response.writableEnded) {
+          throw new Error('Response ended')
+        }
+        response.write(data)
+      }
+
       await handleHttpRequest(
         runner,
         request.headers,
         request.method,
         request.query,
+        request.cookies,
         request.body,
-        response.write.bind(response),
+        write,
       )
       response.end()
       next()
