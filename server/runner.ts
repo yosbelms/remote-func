@@ -5,7 +5,7 @@ import { mins, isFunction } from './util'
 import { EvalError } from './error'
 import { readApiModule, contextifyApi } from './api'
 import { FunctionCache } from './function-cache'
-import { transform } from './function-transform'
+import { transform } from './language/function-transform'
 import { createWatchdog } from './watchdog'
 import { proxifyDeep, createModuleContextProxies } from './proxy'
 
@@ -62,7 +62,11 @@ export class Runner {
 
     if (!fn) {
       try {
-        const { code } = transform(source)
+        let code = ''
+        const babelResult = transform(source)
+        if (babelResult) {
+          code = babelResult.code || ''
+        }
 
         const script = new Script(`exports.default = (${apiKeys.join(',')}) => ${code};`, {
           filename: 'remote-func:vm',

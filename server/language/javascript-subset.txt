@@ -1,0 +1,52 @@
+
+// a
+/* a */
+let a, b;
+const c = [
+  1, '', ``, "", /x/,
+  true, false, null, undefined, void 0, void (0),
+]
+
+a = { a: 1 }
+a = [...a]
+a = { ...a }
+
+a.b(a, b, ...c)[d].e().f
+
+a = (a + a)
+
+a = () => 1
+a = () => { }
+a = async () => 1
+a = async () => { await 1 }
+a = (a, { a: b }, c = 1, ...d) => { return }
+
+a = a += a -= a + a - a * a / a & a | a && a || a
+a = a === a !== a > a >= a < a <= a
+
+a ? a : a
+
+a++
+a--
+--a
+++a;
++ a;
+- a;
+!a;
+
+a in b
+
+const [d, e] = d
+const { f, g } = d
+
+a = typeof b
+
+if (true) { }
+switch (1) {
+  case 1: break
+  default:
+}
+throw a()
+do { } while (1)
+while (1) { }
+for (let a = 1; ;) { }

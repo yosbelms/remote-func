@@ -1,12 +1,3 @@
-import * as babel from 'babel-core'
-
-export const transform = (src: string, timeout: number = 1000) => {
-  const sourceProcessorPlugin = screateSourceProcessorPlugin(timeout)
-  const out = babel.transform(src, {
-    plugins: [sourceProcessorPlugin]
-  })
-  return out
-}
 
 const getParentFunctionNode = (t: any, path: any) => {
   let parent = path
@@ -44,20 +35,10 @@ const handleLoop = (t: any, path: any, state: any, timeout: number) => {
   path.node.body.body.unshift(controlCheck)
 }
 
-const screateSourceProcessorPlugin = (timeout: number) => {
+export const createWatchdogPlugin = (timeout: number) => {
   return ({ types: t }: { types: any }) => {
     return {
       visitor: {
-        FunctionDeclaration: (path: any) => {
-          throw path.buildCodeFrameError('Expected ArrowFunction')
-        },
-        FunctionExpression: (path: any) => {
-          throw path.buildCodeFrameError('Expected ArrowFunction')
-        },
-        NewExpression: (path: any) => {
-          throw path.buildCodeFrameError('Unknown new keyword')
-        },
-
         ForStatement: (path: any, state: any) => handleLoop(t, path, state, timeout),
         WhileStatement: (path: any, state: any) => handleLoop(t, path, state, timeout),
         DoWhileStatement: (path: any, state: any) => handleLoop(t, path, state, timeout),
