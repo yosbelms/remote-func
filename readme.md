@@ -3,7 +3,7 @@
 # Remote-Func
 ### JavaScript as the query language for your API
 
-Remote-func allows use TypeScript/JavaScript as the query language of your APIs.
+Remote-func allows use a subset of TypeScript/JavaScript as the query language of your APIs.
 
 ## Key features
 
