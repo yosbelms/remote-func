@@ -22,7 +22,7 @@ const runRemoteFuncBench = () => {
     source,
     args: [1]
   }
-  const url = `http://localhost:5000/r-func?requests=${encodeURIComponent(JSON.stringify(request) + '\n')}`
+  const url = `http://localhost:5000/r-func?requests=${encodeURIComponent(JSON.stringify(request))}`
   autocannon.track(autocannon({ url, duration: benchmarkDuration }, () => process.exit(0)), { renderProgressBar: true })
 }
 

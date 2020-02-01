@@ -59,11 +59,6 @@ const handleHttpRequest = (
         strigifier.write({ index, error: stack || err })
       })
       resultPromises.push(resultPromise)
-    },
-    onClose(buffer: string) {
-      if (isString(buffer) && buffer.length > 0) {
-        throw new Error('Closing JSON stream with data in buffer')
-      }
     }
   })
 
