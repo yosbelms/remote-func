@@ -16,4 +16,4 @@ export const funcUrl = <T>(url: string, rf: T): Function => {
     return url + urlParam + encodeURIComponent(JSON.stringify({ source, args }))
   }
   return result as Function
-} 
+}

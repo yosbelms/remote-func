@@ -9,6 +9,15 @@ export const isPrimitive = (v: any) => v == null || (!isFunction(v) && !isObject
 export const isThenable = (v: any) => v && isFunction(v.then)
 export const isArray = Array.isArray.bind(Array)
 export const isString = (v: any) => typeof v === 'string'
+export const isProduction = () => {
+  const { NODE_ENV } = process.env
+  return NODE_ENV === 'production'
+}
+export const getConsole = () => (isProduction()
+  ? { log: noop, warn: noop, error: noop }
+  : console
+)
+
 
 const readOnlyTraps = {
   construct(target: any, args: any[]): any {

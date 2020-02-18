@@ -1,5 +1,5 @@
 import koaCompose, { Middleware, ComposedMiddleware } from 'koa-compose'
-import { mins, readOnly } from './util'
+import { mins, readOnly, getConsole } from './util'
 import { EvalError } from './error'
 import { readModule, contextifyApi } from './api'
 import { Cache } from './cache'
@@ -27,7 +27,7 @@ export class Engine {
     }
 
     this.readOnlyNatives = {
-      console: readOnly(console),
+      console: readOnly(getConsole()),
 
       Promise: readOnly(Promise),
       Object: readOnly(Object),
