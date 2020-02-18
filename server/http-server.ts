@@ -1,15 +1,13 @@
 import pSettle from 'p-settle'
-import { Runner, createRunner } from './runner'
+import express from 'express'
+import { Engine, createEngine } from './engine'
 import { BaseError, ErrorType } from './error'
 import { createParser, createStringifier } from '../client/json-stream'
 import { RequestMessage, ResponseMessage } from '../client/message'
-import { isString } from './util'
 
 export interface RequestContext {
-  headers: any
-  method: string
-  query: any
-  cookies: any
+  request: any
+  response: string
   source: string
   args: any[]
 }
@@ -24,35 +22,19 @@ const getHttpStatusFromError = (err: BaseError) => {
 }
 
 const handleHttpRequest = (
-  runner: Runner,
-  headers: any,
-  method: string,
-  query: any,
-  cookies: any,
-  body: any,
+  engine: Engine,
+  requests: string,
   write: (data: any) => void,
+  context: any,
 ) => {
-  let requests: string
-
-  switch (method.toUpperCase()) {
-    case 'GET':
-      requests = query.requests
-      break
-    case 'POST':
-      requests = body
-      break
-    default:
-      throw new Error('method not allowed')
-  }
-
   const resultPromises: Promise<any>[] = []
 
   const strigifier = createStringifier<ResponseMessage>({ onData: write })
   const parser = createParser<RequestMessage>({
     onData(data: RequestMessage) {
       const { index, source, args } = data
-      const ctx: RequestContext = { headers, method, query, cookies, source, args }
-      const resultPromise = runner.run(source || '', args, ctx).then(result => {
+      const ctx: RequestContext = { ...context, source, args }
+      const resultPromise = engine.run(source || '', args, ctx).then(result => {
         strigifier.write({ index, result })
       }).catch((err = {}) => {
         const { stack } = err
@@ -69,7 +51,7 @@ const handleHttpRequest = (
 }
 
 const createMiddleware = (
-  runner: Runner = createRunner(),
+  engine: Engine = createEngine(),
 ) => {
   return async (request: any, response: any, next: Function) => {
     try {
@@ -87,14 +69,33 @@ const createMiddleware = (
         response.write(data)
       }
 
+      const method = request.method
+      const query = request.query
+      const body = request.body
+
+      let requests
+
+      switch (method.toUpperCase()) {
+        case 'GET':
+          requests = query.requests
+          break
+        case 'POST':
+          requests = body
+          break
+        default:
+          throw new Error('method not allowed')
+      }
+
+      const context = {
+        request,
+        response,
+      }
+
       await handleHttpRequest(
-        runner,
-        request.headers,
-        request.method,
-        request.query,
-        request.cookies,
-        request.body,
+        engine,
+        requests,
         write,
+        context,
       )
       response.end()
       next()
@@ -106,25 +107,17 @@ const createMiddleware = (
   }
 }
 
-export const setupExpressServer = (config: {
+export const setupHttpServer = (config: {
   path?: string,
   app?: any,
-  runner: Runner,
+  engine: Engine,
 }) => {
-  let { path, app, runner } = config
-  let express
-  let bodyParser
-  try {
-    express = require('express')
-    bodyParser = require('body-parser')
-  } catch (_) {
-    throw new Error('Please add Express.js as dependency')
-  }
+  let { path, app, engine } = config
 
   if (!app) {
     app = express()
   }
 
-  app.use(path || '/', [bodyParser.text(), createMiddleware(runner)])
+  app.use(path || '/', [express.text(), createMiddleware(engine)])
   return app
 }

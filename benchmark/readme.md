@@ -4,7 +4,13 @@ Install dependencies:
 ```
 npm i
 ```
+
 Run benchmarks:
 ```
-npm start
+npm run start
+```
+
+For concurrency tests:
+```
+npm run start-concurrency
 ```

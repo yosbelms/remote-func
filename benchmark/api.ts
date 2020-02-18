@@ -1,4 +1,4 @@
-import { setupExpressServer, createRunner } from '../server'
+import { endpoint } from '../server'
 const data = require('./data.json')
 
 type Author = {
@@ -13,22 +13,14 @@ type Book = {
   author: Author
 }
 
-const api = {
-  async getBookById(id: number) {
+export const query = {
+  bookById: endpoint(_ => async (id: number) => {
     return data.books.find((b: any) => b.id = id)
-  },
-  async getBookAuthor(book: Book) {
+  }),
+  authorByBook: endpoint(_ => async (book: Book) => {
     if (book && book.authorId !== void 0) {
       return data.authors.find((a: Author) => a.id = book.authorId)
     }
-  },
+  }),
 }
 
-setupExpressServer({
-  path: '/r-func',
-  runner: createRunner({
-    api,
-  })
-}).listen(5000, () => {
-  console.log(`🚀 Remote-func server ready`)
-})

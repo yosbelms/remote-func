@@ -5,10 +5,26 @@ export const mins = (m: number) => secs(m) * 60
 
 export const isObject = (obj: any) => typeof obj === 'object' && obj !== null
 export const isFunction = (fn: any) => typeof fn === 'function'
-export const isPrimitive = (v: any) => v == null || (!isFunction(v) && !isObject('object'))
+export const isPrimitive = (v: any) => v == null || (!isFunction(v) && !isObject(v))
 export const isThenable = (v: any) => v && isFunction(v.then)
 export const isArray = Array.isArray.bind(Array)
 export const isString = (v: any) => typeof v === 'string'
+
+const readOnlyTraps = {
+  construct(target: any, args: any[]): any {
+    return readOnly(new target(...args))
+  },
+  get(target: any, prop: any, receiver: any): any {
+    return readOnly(Reflect.get(target, prop, receiver))
+  },
+  set(target: any, prop: any, val: any) {
+    return val
+  },
+}
+
+export const readOnly = <T>(target: T, traps: { [k: string]: Function } = {}): T => {
+  return new Proxy(target, { ...readOnlyTraps, ...traps })
+}
 
 export const deepMap = (
   obj: any,

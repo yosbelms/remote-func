@@ -17,19 +17,15 @@ export const BlogApi = {
 }
 ```
 
-### Create Remote-func Server
-
-Currently Remote-func only supports Express.JS web server. The first step is to install `express` as project dependency. Run `npm i express` from the root of your project.
-
-Next, import the API created in the previous step, provided to the Remote-func `Runner`, and setup the server.
+### Create Server
 
 ```ts
-import { setupExpressServer, createRunner } from 'remote-func/server'
+import { setupHttpServer, createEngine } from 'remote-func/server'
 import { BlogApi } from './blog-api'
 
-const app = setupExpressServer({
+const app = setupHttpServer({
   path: '/',
-  runner: createRunner({
+  engine: createEngine({
     api: { BlogApi },
   }),
 })
@@ -37,17 +33,28 @@ const app = setupExpressServer({
 app.listen(5000)
 ```
 
-That's it, now we have a Remote-func API server mounted in path `/`, and port `5000`.
-
-### Remote functions
-A remote function is a function that will be executed by a Remote-func server. Often composed by a block of requests and a block of data reductions.
+## Create client
 
 ```ts
-// articles.ts
+import { createClient, createHttpHandler } from 'remote-func/client'
 
-import { func } from 'remote-func/client'
+const client = createClient({
+  handler: createHttpHandler({
+    url: `http://localhost:5000/`,
+    fetch: fetch as any,
+  })
+})
+```
 
-export const getArticleWithComments = func`async (slug) => {
+## Query your API
+
+Queries in Remote-func are JS code that will be executed by the Remote-func engine. Often composed by a block of requests and a block of data reductions. Remote functions needs to be bound to a Remote-func client.
+
+```ts
+import { func, bind } from 'remote-func/client'
+
+// early binding
+export const getArticleWithComments = bind(client, func`async (slug) => {
   // request block
   const article = await BlogApi.getArticle(slug)
   const comments = await BlogApi.getComments(article.id)
@@ -57,36 +64,11 @@ export const getArticleWithComments = func`async (slug) => {
     ...article,
     comments: comments,
   }
-}`
+}`)
 ```
 
-Remote functions needs to be bound to a Remote-func client.
-
-**Create client**
+Now `getArticleWithComments` can be used as normal function.
 
 ```ts
-import { createClient } from 'remote-func/client'
-import { getArticleWithComments } from './articles'
-
-createClient({ url: 'http://localhost:5000/' }).bind([
-  getArticleWithComments
-])
-```
-
-Also can bind all the remote functions exported by a module, using the spread operator, this is a convenient way that will only bind remote functions existing in the module, and ignore the rest.
-
-```ts
-import * as articles from './articles'
-createClient().bind([
-  ...articles
-])
-```
-
-Now you are ready to query your API using a remote function, example:
-
-```ts
-import { getArticleWithComments } from './articles'
-getArticleWithComments('some-slug').then(data => {
-  console.log(data)
-})
+const articleWithComment = await getArticleWithComments('some-slug')
 ```

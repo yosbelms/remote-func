@@ -1,23 +1,23 @@
-import { createRunner, Runner } from '../server/runner'
+import { createEngine, Engine } from '../server/engine'
 import 'jasmine'
 import { EvalError, TimeoutError } from '../server/error'
 import { endpoint } from '../server/api'
 import { secs } from '../server/util'
 
-describe('runner', () => {
-  let runner: Runner
+describe('engine', () => {
+  let engine: Engine
 
   it('should run javascript function', async () => {
     const value = 1
-    runner = createRunner()
-    const result = await runner.run('async (a) => a', [value])
+    engine = createEngine()
+    const result = await engine.run('async (a) => a', [value])
     expect(result).toBe(value)
   })
 
   it('should throw EvalError if source is not a function', (done) => {
     const value = 1
-    runner = createRunner()
-    runner.run('const a', [value]).catch(err => {
+    engine = createEngine()
+    engine.run('const a', [value]).catch(err => {
       expect(err instanceof EvalError).toBeTruthy()
       done()
     })
@@ -25,23 +25,23 @@ describe('runner', () => {
 
   it('should throw EvalError if there is an error while evaluating', (done) => {
     const value = 1
-    runner = createRunner()
-    runner.run('async () => #', [value]).catch(err => {
+    engine = createEngine()
+    engine.run('async () => #', [value]).catch(err => {
       expect(err instanceof EvalError).toBeTruthy()
       done()
     })
   })
 
   it('should throw TimeoutError if there is an error while executing', (done) => {
-    runner = createRunner({ timeout: secs(1) })
-    runner.run('async () => {while (true) {}}').catch(err => {
+    engine = createEngine({ timeout: secs(1) })
+    engine.run('async () => {while (true) {}}').catch(err => {
       expect(err instanceof TimeoutError).toBeTruthy()
       done()
     })
   })
 
   it('should use the same context for all calls inside a remote function', (done) => {
-    runner = createRunner({
+    engine = createEngine({
       api: {
         f1: endpoint(ctx => () => ctx),
         f2: endpoint(ctx => () => ctx),
@@ -54,8 +54,8 @@ describe('runner', () => {
       return r1 === r2
     }`
 
-    const p1 = runner.run(rf, void 0, 5)
-    const p2 = runner.run(rf, void 0, 7)
+    const p1 = engine.run(rf, void 0, 5)
+    const p2 = engine.run(rf, void 0, 7)
     Promise.all([p1, p2]).then(([r1, r2]) => {
       expect(r1).toBeTruthy()
       expect(r2).toBeTruthy()
@@ -76,7 +76,7 @@ describe('runner', () => {
       return result
     })
 
-    runner = createRunner({
+    engine = createEngine({
       middlewares,
       api: {
         f1: endpoint((ctx: any) => (x: number) => {
@@ -86,7 +86,7 @@ describe('runner', () => {
       },
     })
 
-    runner.run(`async () => {
+    engine.run(`async () => {
       await f1(5)
       await f1(5)
       return await f1(1)

@@ -1,26 +1,26 @@
 import { mins, secs } from './util'
 
-export interface FunctionCacheConfig {
-  maxFunctionsCount: number
+export interface CacheConfig {
+  maxDataCount: number
   maxIddleTime: number
   gcIntervalTime: number
 }
 
-export interface FunctionCacheEntry {
-  fn: Function
+export interface CacheEntry<T> {
+  data: T
   createdAt: number
   usedAt: number
 }
 
-export class FunctionCache {
-  private map: Map<string, FunctionCacheEntry>
-  private config: FunctionCacheConfig
+export class Cache<T> {
+  private map: Map<string, CacheEntry<T>>
+  private config: CacheConfig
 
-  constructor(config: Partial<FunctionCacheConfig> = {}) {
+  constructor(config: Partial<CacheConfig> = {}) {
     this.map = new Map()
 
     this.config = {
-      maxFunctionsCount: 10000,
+      maxDataCount: 10000,
       maxIddleTime: mins(10),
       gcIntervalTime: secs(10),
       ...config,
@@ -31,11 +31,11 @@ export class FunctionCache {
   }
 
   private runGc = () => {
-    const { maxFunctionsCount, maxIddleTime } = this.config
+    const { maxDataCount, maxIddleTime } = this.config
     const size = this.map.size
     const garbageKeys: string[] = []
     const now = Date.now()
-    const idxEndRemoval = size - maxFunctionsCount
+    const idxEndRemoval = size - maxDataCount
     let count = 0
 
     this.map.forEach((entry, key) => {
@@ -54,18 +54,18 @@ export class FunctionCache {
     garbageKeys.forEach(key => this.delete(key))
   }
 
-  get(key: string): Function | void {
+  get(key: string): T | void {
     const entry = this.map.get(key)
     if (entry) {
       entry.usedAt = Date.now()
-      return entry.fn
+      return entry.data
     }
   }
 
-  set(key: string, fn: Function) {
+  set(key: string, data: T) {
     const now = Date.now()
     return this.map.set(key, {
-      fn,
+      data,
       createdAt: now,
       usedAt: now
     })

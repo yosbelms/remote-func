@@ -20,51 +20,13 @@ Often part of the endpoint logic depends on request metadata. For permission, po
 import { endpoint, RequestContext } from 'remote-func/server'
 
 export const getArticle = endpoint((ctx: RequestContext) => (slug: string)=> {
-  // ctx.headers
-  // ctx.method
+  // ctx.request
+  // ctx.response
   // ...
 })
 ```
 
-## Endpoint organization
-
-Complex apps requires scalable API, so, a proper organization is important in order to scale. Grouping endpoints in modules helps on this task.
-
-```ts
-// articles.ts
-export const getArticle = (slug: string) => { }
-```
-
-```ts
-// comments.ts
-export const getComments = (articleId: number) => { }
-```
-
-```ts
-// blog-api.ts
-import * as articles from './articles'
-import * as comments from './comments'
-
-export const BlogApi = {
-  articles,
-  comments,
-}
-```
-
-It can be queried remotely like the following:
-
-```ts
-// remote function
-const articleWithComments = func(async(slug: string) => {
-  const { articles, comments } = BlogApi
-  const article = articles.getArticle(slug)
-  article.comments = comments.getComments(article.id)
-  return article
-})
-```
-
-
-## Return type
+## API endpoint return type
 
 All values returned by endpoints are deep cloned (API Isolation in remote-func docs). Hence, function values are not removed from the final result. To avoid TypeScript false positives, there is a generic type names `Result` to cover the correct type transformation of cloned endpoint returned values. Example:
 

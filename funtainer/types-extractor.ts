@@ -3,12 +3,12 @@ import * as babel from '@babel/core'
 export const extractTypes = (src: string) => {
   const typesList: any[] = []
   babel.transform(src, {
-    plugins: [hitPlugin(typesList)]
+    plugins: [typeCollectorPlugin(typesList)]
   })
   return Array.from(new Set(typesList))
 }
 
-const hitPlugin = (typesList: string[] = []) => {
+const typeCollectorPlugin = (typesList: string[] = []) => {
   return ({ types: t }: { types: any }) => {
     // slice because babel throws an strange error here related to symbols
     const babelTypes = t.TYPES.slice(0, t.TYPES.length - 10)

@@ -1,15 +1,13 @@
 # Http Client
 
-The communication between Remote-func client and server is through HTTP.
-
 ```ts
-import { createClient } from 'remote-func/client'
+import { createClient, createHttpHandler } from 'remote-func/client'
 
 const client = createClient({
-  url: 'http://remote-func-server',
-  functions: [
-    // registered functions
-  ],
+  handler: createHttpHandler({
+    url: `http://localhost:5000/`,
+    fetch: fetch as any,
+  })
 })
 ```
 

@@ -1,6 +1,6 @@
 import 'jasmine'
-import { createRunner, setupExpressServer, Result } from '../server'
-import { createClient, func, bind } from '../client'
+import { createEngine, setupHttpServer, Result } from '../server'
+import { createClient, createHttpHandler, func, bind } from '../client'
 import fetch from 'node-fetch'
 
 const port = 7000
@@ -11,8 +11,8 @@ const api = {
 
 describe('End to End', () => {
   beforeAll((done) => {
-    setupExpressServer({
-      runner: createRunner({
+    setupHttpServer({
+      engine: createEngine({
         api,
       })
     }).listen(port, () => done())
@@ -20,8 +20,10 @@ describe('End to End', () => {
 
   it('should execute functions in the server', async () => {
     const client = createClient({
-      url: `http://localhost:${port}/`,
-      fetch: fetch as any,
+      handler: createHttpHandler({
+        url: `http://localhost:${port}/`,
+        fetch: fetch as any,
+      })
     })
     const rFunc = bind(client, func(`async () => one()`))
 
@@ -30,10 +32,12 @@ describe('End to End', () => {
 
   it('should execute functions in the server using GET', async () => {
     const client = createClient({
-      url: `http://localhost:${port}/`,
-      fetch: (url: string, { headers, body }) => {
-        return fetch(`${url}?requests=${encodeURIComponent(body)}`, { method: 'GET', headers })
-      },
+      handler: createHttpHandler({
+        url: `http://localhost:${port}/`,
+        fetch: (url: string, { headers, body }) => {
+          return fetch(`${url}?requests=${encodeURIComponent(body)}`, { method: 'GET', headers })
+        },
+      }),
     })
     const rFunc = bind(client, func(`async () => one()`))
 

@@ -1,6 +1,6 @@
-import { endpoint, isEndpoint, readApiModule, isApiModule, contextifyApi } from '../server/api'
-import * as fixtureApiModule from './fixtures/apiModule'
 import 'jasmine'
+import { endpoint, isEndpoint, readModule, contextifyApi } from '../server/api'
+import * as fixtureApiModule from './fixtures/apiModule'
 
 const ctxExample = { prop: 1 }
 const apiExample = {
@@ -8,20 +8,16 @@ const apiExample = {
   endpoint: endpoint(() => (a: any) => a),
   endpointReturnCtx: endpoint((ctx) => () => ctx),
 }
-
 describe('api', () => {
   it('should recognize api module', () => {
-    const apiModule = readApiModule(fixtureApiModule)
-    expect(apiModule.namespace).toBe('MyApi')
+    const apiModule = readModule(fixtureApiModule)
+    expect(apiModule).toEqual(fixtureApiModule)
   })
 
-  it('should recognize api module', () => {
-    expect(isApiModule(fixtureApiModule)).toBe(true)
-  })
-
-  it('should read api module', () => {
-    const apiModule = readApiModule(fixtureApiModule)
-    expect(apiModule.namespace).toBe('MyApi')
+  it('can not be mutated', () => {
+    const api = contextifyApi(apiExample)
+    api.func = () => { }
+    expect(api.func(1)).toBe(1)
   })
 
   describe('endopoint', () => {

@@ -1,55 +1,17 @@
-import { Runner } from './runner'
-import { isFunction, deepMap, deepClone, isObject, isString, DeepClone } from './util'
+import { isFunction, deepClone, DeepClone, readOnly } from './util'
 
-export const SERIALIZED_FUNCTION_TOKEN = '@@token/function'
-export const ENDPOINT_TOKEN = '@@token/endpoint'
-export const API_MODULE_TOKEN = '@@token/api-module'
+const ENDPOINT_TOKEN = '@@token/endpoint'
 
 export type Result<T> = DeepClone<T>
 
-export interface ApiModule {
-  namespace: string
-  api: any
-  init: Function
-}
-
-export const declareApiModule = (namespace: string, init?: (runner: Runner) => void): void => {
-  return {
-    API_MODULE_TOKEN,
-    namespace,
-    init,
-  } as unknown as void
-}
-
-const isApiModuleDeclaration = (modDeclaration: any) => {
-  return (
-    isObject(modDeclaration)
-    && modDeclaration.API_MODULE_TOKEN === API_MODULE_TOKEN
-    && isString(modDeclaration.namespace)
-  )
-}
-
-export const isApiModule = (mod: any) => {
-  return (
-    mod
-    && mod.default
-    && isApiModuleDeclaration(mod.default)
-  )
-}
-
-export const readApiModule = (mod: any): ApiModule => {
-  if (isApiModule(mod)) {
-    const ns = mod.default.namespace
-    const api = mod[ns]
-    const init = isFunction(mod.default.init) && mod.default.init
-    return {
-      namespace: ns,
-      api: { [ns]: api },
-      init
-    }
-  } else {
-    throw new Error(`invalid api module`)
+export const readModule = <T extends { [k: string]: any }>(mod: T): T => {
+  if (!mod) {
+    throw new Error('invalid module')
   }
+  if (mod.default !== void 0) {
+    throw new Error('api modules should not export default')
+  }
+  return { ...mod }
 }
 
 export const endpoint = <C, F extends Function>(fn: (ctx: C) => F) => {
@@ -62,16 +24,18 @@ export const isEndpoint = (fn: Function) => {
 }
 
 export const contextifyApi = <T>(api: T, context?: any): T => {
-  return deepMap(api, (propValue, container) => {
-    if (isFunction(propValue)) {
-      let fn = propValue.bind(container)
-
-      if (isEndpoint(propValue)) {
-        fn = fn(context)
+  const traps = {
+    get(target: any, prop: any, receiver: any): any {
+      const value = Reflect.get(target, prop, receiver)
+      if (isFunction(value)) {
+        let fn = value.bind(target)
+        if (isEndpoint(value)) {
+          fn = fn(context)
+        }
+        return (...args: any[]) => deepClone(fn(...args))
       }
-
-      return (...args: any[]) => deepClone(fn(...args))
-    }
-    return propValue
-  })
+      return readOnly(value, traps)
+    },
+  }
+  return readOnly(api, traps)
 }

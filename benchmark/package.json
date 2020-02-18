@@ -1,0 +1,26 @@
+{
+  "name": "bechmark",
+  "version": "1.0.0",
+  "description": "remote-func benchmark",
+  "scripts": {
+    "start": "npx ts-node ./run.ts",
+    "start-concurrency": "node --inspect --require ts-node/register ./run-concurrency.ts"
+  },
+  "engines": {
+    "node": ">=12"
+  },
+  "author": "Yosbel Marin",
+  "license": "MIT",
+  "dependencies": {
+    "apollo-server": "^2.9.16",
+    "autocannon": "^4.6.0",
+    "cli-table": "^0.3.1",
+    "cli-table3": "^0.5.1",
+    "colors": "^1.4.0",
+    "express": "^4.17.1",
+    "node-fetch": "^2.6.0",
+    "p-settle": "^3.1.0",
+    "p-timeout": "^3.2.0",
+    "ts-node": "^8.6.2"
+  }
+}

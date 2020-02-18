@@ -1,4 +1,3 @@
-import { declareApiModule } from '../../server'
 
-export default declareApiModule('MyApi')
-export const MyApi = {}
+export const posts = {}
+export const comments = {}

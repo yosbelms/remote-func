@@ -30,17 +30,16 @@ a++
 a--
 --a
 ++a;
-+ a;
-- a;
++a;
+-a;
 !a;
 
 a in b
 
 const [d, e] = d
-const { f, g } = d
+const { f, [g]: h } = d
 
-a = typeof b
-
+// statements
 if (true) { }
 switch (1) {
   case 1: break

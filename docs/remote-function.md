@@ -1,8 +1,8 @@
 # Remote functions
 
-Remote functions are `async` functions that will be executed in a Remote-func server. They are devised to be more like a procedure that a query, this open new possibilities to front-end, and backend developers allowing the front-end to evolve with more independency from the back-end. Remote functions can be compared to PostgreSQL `DO` statement, and Redis `eval`. 
+Remote functions are `async` functions that will be executed in a Remote-func engine. They are devised to be more like a procedure that a query, this open new possibilities to front-end, and backend developers allowing the front-end to evolve with more independency from the back-end. Remote functions can be compared to PostgreSQL `DO` statement, and Redis `eval`. 
 
-Remote functions are very restrictive because security reasons. These must be `async` functions, and can only run what exposed by the Remote-func server. Native classes can be called as functions, but can no be used with the `new` operator, Also all its static methods are accessible, example: `new Date()` will throw an error, but `Date()` will work as expected, also `Date.now()`. Only a limited set of native classes are allowed to use inside a remote function. These are:
+Remote functions are very restrictive because security reasons. These must be `async` functions, and can only run what exposed by the Remote-func server. Only a limited set of native classes are allowed to use inside a remote function. These are:
 
 - Promise
 - Object
