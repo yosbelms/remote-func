@@ -12,7 +12,7 @@ export interface RequestContext {
   args: any[]
 }
 
-const getHttpStatusFromError = (err: BaseError) => {
+export const getHttpStatusFromError = (err: BaseError) => {
   switch (err.errorType) {
     case ErrorType.TIMEOUT: return 408
     case ErrorType.EVAL: return 400
@@ -21,7 +21,7 @@ const getHttpStatusFromError = (err: BaseError) => {
   }
 }
 
-const handleHttpRequest = (
+export const handleHttpRequest = (
   engine: Engine,
   requests: string,
   write: (data: any) => void,
