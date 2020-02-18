@@ -5,3 +5,7 @@ node_modules/
 shrinkwrap.yaml
 package-lock.json
 yarn-error.log
+# ignore the .ts files
+*.ts
+# include the .d.ts files
+!*.d.ts
