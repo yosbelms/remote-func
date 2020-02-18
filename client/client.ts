@@ -52,7 +52,7 @@ export class Client {
 
   private scheduleBatch(timeout?: number) {
     this.unscheduleBatch()
-    let schedule = Number(timeout) >= 0 ? (fn: any) => setTimeout(fn, timeout) : () => Infinity
+    let schedule = Number(timeout) >= 0 ? (fn: any) => setTimeout(fn, timeout as number) : () => Infinity
     this.batchScheduleTimeout = schedule(this.flush.bind(this))
   }
 
