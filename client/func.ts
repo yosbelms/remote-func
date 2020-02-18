@@ -4,10 +4,10 @@ interface Client {
 
 export interface RemoteFunction extends Function {
   (...args: any[]): any
-  isRemoteFunction: boolean
+  isRemoteFunction?: boolean
   client?: Client
   source?: string
-  bound: boolean
+  bound?: boolean
 }
 
 export interface BoundRemoteFunction extends Function {
@@ -43,7 +43,7 @@ export const func: Func = (statics: TemplateStringsArray | Function | string): R
   return createRemoteFunc(source)
 }
 
-export const bind = (client: Client, remoteFunction: RemoteFunction): BoundRemoteFunction => {
+export const bind = <T>(client: Client, remoteFunction: T & RemoteFunction): T & BoundRemoteFunction => {
   if (!client) {
     throw new Error('Invalid client')
   }
@@ -56,5 +56,5 @@ export const bind = (client: Client, remoteFunction: RemoteFunction): BoundRemot
   const source = remoteFunction.source as string
   const boundRemoteFunction = (...args: any[]) => client.request(source, args)
   boundRemoteFunction.remoteFunction = remoteFunction
-  return boundRemoteFunction as BoundRemoteFunction
+  return boundRemoteFunction as unknown as (T & BoundRemoteFunction)
 }
