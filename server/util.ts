@@ -18,8 +18,7 @@ export const getConsole = () => (isProduction()
   : console
 )
 
-
-const readOnlyTraps = {
+export const readOnlyTraps = {
   construct(target: any, args: any[]): any {
     return readOnly(new target(...args))
   },

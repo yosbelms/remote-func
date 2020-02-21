@@ -23,7 +23,7 @@ const remoteFuncLoad = () => {
     source,
     args: [1]
   }
-  const url = `http://localhost:5000/r-func?requests=${encodeURIComponent(JSON.stringify(request))}`
+  const url = `http://localhost:5000?requests=${encodeURIComponent(JSON.stringify(request))}`
   return autocannon({ url, duration: benchmarkDuration })
 }
 

@@ -1,9 +1,27 @@
 import koaCompose, { Middleware, ComposedMiddleware } from 'koa-compose'
-import { mins, readOnly, getConsole } from './util'
+import { mins, readOnly, getConsole, readOnlyTraps } from './util'
 import { EvalError } from './error'
 import { readModule, contextifyApi } from './api'
 import { Cache } from './cache'
 import { createFuntainer, Funtainer } from '../funtainer'
+
+const publicObjectStaticPropsMap = new Map([
+  ['keys', true],
+  ['values', true],
+  ['hasOwnProperty', true],
+  ['fromEntries', true],
+  ['assign', true],
+  ['create', true],
+])
+
+const objectTraps = {
+  get(target: any, prop: any, receiver: any) {
+    return (publicObjectStaticPropsMap.has(prop)
+      ? readOnlyTraps.get(target, prop, receiver)
+      : void 0
+    )
+  }
+}
 
 export interface EngineConfig {
   api: any
@@ -29,8 +47,8 @@ export class Engine {
     this.readOnlyNatives = {
       console: readOnly(getConsole()),
 
+      Object: readOnly(Object, objectTraps),
       Promise: readOnly(Promise),
-      Object: readOnly(Object),
       Date: readOnly(Date),
       Array: readOnly(Array),
       Number: readOnly(Number),
