@@ -1,16 +1,14 @@
 import pDefer, { DeferredPromise } from 'p-defer'
 import { RequestMessage, ResponseMessage } from './message'
 
-export interface Handler {
-  (
-    requests: RequestMessage[],
-    write: (msg: ResponseMessage) => void,
-    end: (error?: any) => void
-  ): void
+export interface RequestHandlerInterface {
+  getRequests(): RequestMessage[]
+  write: (msg: ResponseMessage) => void
+  end: (error?: any) => void
 }
 
 export interface ClientConfig {
-  handler: Handler
+  handler: (iface: RequestHandlerInterface) => void
   deduplicate: boolean
 }
 
@@ -122,7 +120,13 @@ export class Client {
       deferredPromises.forEach(d => d.reject(reason))
     }
 
-    handler(requests, write, end)
+    handler({
+      getRequests() {
+        return requests
+      },
+      write,
+      end,
+    })
   }
 
   useBatch(config: Partial<BatchConfig> | boolean) {

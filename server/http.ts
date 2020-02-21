@@ -11,7 +11,7 @@ export interface RequestContext {
   args: any[]
 }
 
-export interface HttpHandler {
+export interface HttpHandlerInterface {
   engine?: Engine
   initialContext?: Partial<RequestContext> & any
   getQueryParam(key: string): any
@@ -33,24 +33,24 @@ const getHttpStatusFromError = (err: BaseError) => {
   }
 }
 
-export const handleHttpRequest = async (httpHandler: HttpHandler) => {
+export const handleHttpRequest = async (iface: HttpHandlerInterface) => {
   try {
-    const { initialContext = {}, engine = createEngine() } = httpHandler
-    const supportsWebStreams = Number(httpHandler.getHeader('Supports-Web-Streams'))
-    httpHandler.setStatusCode(207)
-    httpHandler.setHeader('Content-Type', 'text/plain;charset=utf-8')
+    const { initialContext = {}, engine = createEngine() } = iface
+    const supportsWebStreams = Number(iface.getHeader('Supports-Web-Streams'))
+    iface.setStatusCode(207)
+    iface.setHeader('Content-Type', 'text/plain;charset=utf-8')
     if (supportsWebStreams) {
-      httpHandler.setHeader('Transfer-Encoding', 'chunked')
+      iface.setHeader('Transfer-Encoding', 'chunked')
     }
 
     let requests
 
-    switch (String(httpHandler.getMethod()).toUpperCase()) {
+    switch (String(iface.getMethod()).toUpperCase()) {
       case 'GET':
-        requests = httpHandler.getQueryParam('requests')
+        requests = iface.getQueryParam('requests')
         break
       case 'POST':
-        requests = httpHandler.getBody()
+        requests = iface.getBody()
         break
       default:
         throw new Error('method not allowed')
@@ -58,7 +58,7 @@ export const handleHttpRequest = async (httpHandler: HttpHandler) => {
 
     const resultPromises: Promise<any>[] = []
 
-    const strigifier = createStringifier<ResponseMessage>({ onData: httpHandler.write })
+    const strigifier = createStringifier<ResponseMessage>({ onData: iface.write })
     const parser = createParser<RequestMessage>({
       onData(data: RequestMessage) {
         const { index, source, args } = data
@@ -78,9 +78,9 @@ export const handleHttpRequest = async (httpHandler: HttpHandler) => {
     parser.close()
     await pSettle(resultPromises)
   } catch (err) {
-    httpHandler.setStatusCode(getHttpStatusFromError(err))
-    httpHandler.write(err.stack || err)
+    iface.setStatusCode(getHttpStatusFromError(err))
+    iface.write(err.stack || err)
   } finally {
-    httpHandler.end()
+    iface.end()
   }
 }

@@ -1,4 +1,4 @@
-import { Handler } from '../client'
+import { RequestHandlerInterface } from '../client'
 import { createParser, createStringifier } from '../json-stream'
 import { RequestMessage, ResponseMessage } from '../message'
 
@@ -59,7 +59,7 @@ export interface HttpHandlerConfig {
   fetch: Fetch
 }
 
-export const httpHandler = (_config: Partial<HttpHandlerConfig> = {}): Handler => {
+export const httpHandler = (_config: Partial<HttpHandlerConfig> = {}) => {
   let url = 'http://localhost/'
   let globalFetch
   if (global && (global as any).location) {
@@ -73,12 +73,10 @@ export const httpHandler = (_config: Partial<HttpHandlerConfig> = {}): Handler =
     ..._config,
   } as HttpHandlerConfig
 
-  return (
-    requests: RequestMessage[],
-    write: (msg: ResponseMessage) => void,
-    end: (error?: any) => void
-  ) => {
+  return (iface: RequestHandlerInterface): void => {
     let payload = ''
+    const requests = iface.getRequests()
+    const { write, end } = iface
     const { url, fetch } = config
     const headers = {
       'Content-Type': 'text/plain;charset=utf-8',
