@@ -19,27 +19,32 @@ export const BlogApi = {
 
 ### Create Server
 
+Install ExpressJS
+```
+npm i express
+```
+
+Create HTTP server
 ```ts
-import { setupHttpServer, createEngine } from 'remote-func/server'
+import express from 'express'
+import { createEngine, expressHandler } from 'remote-func/server'
 import { BlogApi } from './blog-api'
 
-const app = setupHttpServer({
-  path: '/',
-  engine: createEngine({
-    api: { BlogApi },
-  }),
+const app = express()
+const engine = createEngine({
+  api: { BlogApi },
 })
-
+app.use('/', expressHandler(engine))
 app.listen(5000)
 ```
 
 ## Create client
 
 ```ts
-import { createClient, createHttpHandler } from 'remote-func/client'
+import { createClient, httpHandler } from 'remote-func/client'
 
 const client = createClient({
-  handler: createHttpHandler({
+  handler: httpHandler({
     url: `http://localhost:5000/`,
     fetch: fetch as any,
   })

@@ -22,27 +22,22 @@ Remote-func is a TypeScript library focused on developer experience. There are t
 
 Plain JavaScript
 ```ts
-import { func } from 'remote-func/client'
-
-const getArticleWithComments = func`async (slug) {
+const getArticleWithComments = bind(client, func`async (slug) {
   const article = await BlogApi.getArticle(slug)
   article.comments = await BlogApi.getComments(article.id)
   return article
-}`
+}`)
 
 getArticleWithComments(2).then(...)
 ```
 
 With Babel plugin and TypeScript
 ```ts
-import { func } from 'remote-func/client'
-import { BlogApi } from './imported-apis/api'
-
-const getArticleWithComments = func(async (slug: string) => {
+const getArticleWithComments = bind(client, func(async (slug: string) => {
   const article = await BlogApi.getArticle(slug)
   article.comments = await BlogApi.getComments(article.id)
   return article
-})
+}))
 
 getArticleWithComments(2).then(...)
 ```

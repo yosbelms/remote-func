@@ -1,14 +1,15 @@
 # Http Client
 
 ```ts
-import { createClient, createHttpHandler } from 'remote-func/client'
+import { createClient, httpHandler } from 'remote-func/client'
 
 const client = createClient({
-  handler: createHttpHandler({
+  handler: httpHandler({
     url: `http://localhost:5000/`,
     fetch: fetch as any,
   })
 })
+
 ```
 
 ## Batching
