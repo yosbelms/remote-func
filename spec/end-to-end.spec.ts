@@ -1,6 +1,7 @@
 import 'jasmine'
-import { createEngine, setupHttpServer, Result } from '../server'
-import { createClient, createHttpHandler, func, bind } from '../client'
+import express from 'express'
+import { createEngine, expressHandler, Result } from '../server'
+import { createClient, httpHandler, func, bind } from '../client'
 import fetch from 'node-fetch'
 
 const port = 7000
@@ -11,16 +12,15 @@ const api = {
 
 describe('End to End', () => {
   beforeAll((done) => {
-    setupHttpServer({
-      engine: createEngine({
-        api,
-      })
-    }).listen(port, () => done())
+    const app = express()
+    const engine = createEngine({ api })
+    app.use('/', expressHandler(engine))
+    app.listen(port, () => done())
   })
 
   it('should execute functions in the server', async () => {
     const client = createClient({
-      handler: createHttpHandler({
+      handler: httpHandler({
         url: `http://localhost:${port}/`,
         fetch: fetch as any,
       })
@@ -32,7 +32,7 @@ describe('End to End', () => {
 
   it('should execute functions in the server using GET', async () => {
     const client = createClient({
-      handler: createHttpHandler({
+      handler: httpHandler({
         url: `http://localhost:${port}/`,
         fetch: (url: string, { headers, body }) => {
           return fetch(`${url}?requests=${encodeURIComponent(body)}`, { method: 'GET', headers })
