@@ -24,7 +24,7 @@ export interface HttpHandler {
   end(): void
 }
 
-export const getHttpStatusFromError = (err: BaseError) => {
+const getHttpStatusFromError = (err: BaseError) => {
   switch (err.errorType) {
     case ErrorType.TIMEOUT: return 408
     case ErrorType.EVAL: return 400
