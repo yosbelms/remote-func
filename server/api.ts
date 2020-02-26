@@ -1,4 +1,5 @@
 import { isFunction, deepClone, DeepClone, readOnly } from './util'
+import { isPrimitive } from 'util'
 
 const ENDPOINT_TOKEN = '@@token/endpoint'
 
@@ -27,7 +28,9 @@ export const contextifyApi = <T>(api: T, context?: any): T => {
   const traps = {
     get(target: any, prop: any, receiver: any): any {
       const value = Reflect.get(target, prop, receiver)
-      if (isFunction(value)) {
+      if (isPrimitive(value)) {
+        return value
+      } else if (isFunction(value)) {
         let fn = value.bind(target)
         if (isEndpoint(value)) {
           fn = fn(context)

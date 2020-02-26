@@ -22,7 +22,6 @@ export class Runtime {
   private lastCheck: CheckType
   private memorySize: number = 0
   private sizeCache: WeakMap<object, number>
-  private checkCount: number = 0
 
   constructor(config: Partial<RuntimeConfig>) {
     this.config = {
