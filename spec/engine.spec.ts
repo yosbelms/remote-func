@@ -97,4 +97,25 @@ describe('engine', () => {
     })
   })
 
+  it('should return endpoints paths', () => {
+    engine = createEngine({
+      api: {
+        endpoint: () => null,
+        nested: {
+          endpoint: () => null,
+          nested: {
+            endpoint: () => null,
+          },
+        },
+      }
+    })
+
+    const paths = engine.getEndpointPaths()
+    expect(paths).toEqual([
+      'endpoint',
+      'nested.endpoint',
+      'nested.nested.endpoint',
+    ])
+  })
+
 })

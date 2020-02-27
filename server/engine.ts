@@ -1,5 +1,5 @@
 import koaCompose, { Middleware, ComposedMiddleware } from 'koa-compose'
-import { mins, readOnly, getConsole, readOnlyTraps } from './util'
+import { mins, readOnly, getConsole, readOnlyTraps, deepMap, isFunction } from './util'
 import { EvalError } from './error'
 import { readModule, contextifyApi } from './api'
 import { Cache } from './cache'
@@ -99,6 +99,16 @@ export class Engine {
     }
 
     return funtainer(args, globals)
+  }
+
+  getEndpointPaths(): string[] {
+    const paths: string[] = []
+    deepMap(this.config.api, (value, _, path) => {
+      if (isFunction(value)) {
+        paths.push(path.join('.'))
+      }
+    })
+    return paths
   }
 }
 
