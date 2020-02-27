@@ -131,7 +131,11 @@ export const createRuntimePlugin = () => {
               path.parentPath.replaceWith(setPropExpr)
               return
             }
-          } else if (t.isCallExpression(path.parent) && !path.parent.isRuntimeCall) {
+          } else if (
+            t.isCallExpression(path.parent)
+            && path.parent.callee === path
+            && !path.parent.isRuntimeCall
+          ) {
             const args = path.parent.arguments
             const callProp = t.callExpression(
               t.memberExpression(

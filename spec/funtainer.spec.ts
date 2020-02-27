@@ -59,4 +59,19 @@ describe('Funtainer', () => {
 
   })
 
+  // bug
+  it('should not properly call a function (non member expression) when its arguments are member expressions', async () => {
+    const len = 1
+    const funtainer = createFuntainer({
+      globalNames: ['Array'],
+      source: `async(len) => {
+        const obj = { len: len }
+        return Array(obj.len)
+      }`
+    })
+
+    const result = await funtainer([len], { Array })
+    expect(result.length).toEqual(len)
+  })
+
 })
