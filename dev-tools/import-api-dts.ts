@@ -30,27 +30,41 @@ export const importApiModuleDts = async (apiModulePath: string, destinationDir: 
   })
 }
 
-const compile = (fileNames: string[], options: any): void => {
+const compile = (fileNames: string[], options: any, _log: boolean = true): void => {
   let ts: any
   try {
     ts = require('typescript')
   } catch (_) {
     throw new Error('Please add TypeScript as dependency')
   }
-  let program = ts.createProgram(fileNames, options)
-  let emitResult = program.emit()
+  const log = _log ? console.log.bind(console) : (...args: any[]) => {}
+  const host = ts.createCompilerHost(options)
+  const hostGetSourceFile = host.getSourceFile.bind(host)
+  log(`\nImporting from: ${host.getCurrentDirectory()}\n`)
+  log(`Sources:`)
+  host.getSourceFile = (fileName: string, ...restArgs: any[]) => {
+    const currentDirectory = host.getCurrentDirectory() + path.sep
+    let displayFileName = fileName
+    if (fileName.indexOf(currentDirectory) === 0) {
+      displayFileName = fileName.slice(currentDirectory.length)
+    }
+    log(`${displayFileName}`)
+    return hostGetSourceFile(fileName, ...restArgs)
+  }
+  const program = ts.createProgram(fileNames, options, host)
+  const emitResult = program.emit()
 
-  let allDiagnostics = ts
+  const allDiagnostics = ts
     .getPreEmitDiagnostics(program)
     .concat(emitResult.diagnostics)
 
   allDiagnostics.forEach((diagnostic: any) => {
     if (diagnostic.file) {
-      let { line, character } = diagnostic.file.getLineAndCharacterOfPosition(diagnostic.start!)
-      let message = ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n')
-      console.log(`${diagnostic.file.fileName} (${line + 1},${character + 1}): ${message}`)
+      const { line, character } = diagnostic.file.getLineAndCharacterOfPosition(diagnostic.start!)
+      const message = ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n')
+      log(`${diagnostic.file.fileName} (${line + 1},${character + 1}): ${message}`)
     } else {
-      console.log(`${ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n')}`)
+      log(`${ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n')}`)
     }
   })
 }
