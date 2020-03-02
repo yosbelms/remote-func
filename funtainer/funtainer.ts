@@ -4,6 +4,7 @@ import { extractTypes } from './types-extractor'
 import { createRuntime } from './runtime'
 import { compile } from './compiler'
 import { isValidIdentifier } from './util'
+import { readOnly, getConsole, readOnlyTraps } from '../server/util'
 
 const defaultTimeout = 1 * 1000 * 60 // 1min
 const defaultMemoryLimit = 500 * 1024 * 1024 // 5Mb
@@ -28,15 +29,57 @@ export interface Funtainer {
   source: string
 }
 
+const publicObjectStaticPropsMap = new Map([
+  ['keys', true],
+  ['values', true],
+  ['hasOwnProperty', true],
+  ['fromEntries', true],
+  ['assign', true],
+  ['create', true],
+])
+
+const objectTraps = {
+  get(target: any, prop: any, receiver: any) {
+    return (publicObjectStaticPropsMap.has(prop)
+      ? readOnlyTraps.get(target, prop, receiver)
+      : void 0
+    )
+  }
+}
+
+const readOnlyNatives = {
+  console: readOnly(getConsole()),
+
+  Object: readOnly(Object, objectTraps),
+  Promise: readOnly(Promise),
+  Date: readOnly(Date),
+  Array: readOnly(Array),
+  Number: readOnly(Number),
+  String: readOnly(String),
+
+  // errors
+  Error: readOnly(Error),
+  EvalError: readOnly(EvalError),
+  RangeError: readOnly(RangeError),
+  ReferenceError: readOnly(ReferenceError),
+  SyntaxError: readOnly(SyntaxError),
+  TypeError: readOnly(TypeError),
+  URIError: readOnly(URIError),
+}
+
+const readOnlyNativesNames = Object.keys(readOnlyNatives)
+
 export const createFuntainer = (config: Partial<FuntainerConfig> = {}): Funtainer => {
   const {
-    globalNames = [],
     timeout = defaultTimeout,
     memoryLimit = defaultMemoryLimit,
     source = '',
     filename = 'funtainer:file',
   } = config
 
+  let { globalNames = [] } = config
+
+  globalNames = Array.from(new Set([...readOnlyNativesNames, ...globalNames]))
   globalNames.forEach((name) => {
     if (!isValidIdentifier(name)) {
       throw new Error(`Invalid identifier '${name}'`)
@@ -79,8 +122,9 @@ return ${code}}`
     args?: any[],
     globals?: { [k: string]: any },
   ) => {
+    const _globals = globals || {}
     return (fn
-      .call(null, globals || {})
+      .call(null, { ...readOnlyNatives, ..._globals })
       .apply(null, args || [])
     )
   }

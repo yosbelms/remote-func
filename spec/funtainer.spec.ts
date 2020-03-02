@@ -42,7 +42,7 @@ describe('Funtainer', () => {
     it('on access to undeclared global', async () => {
       const create = () => createFuntainer({
         globalNames: [],
-        source: `async() => Object.keys([])`
+        source: `async() => UndeclaredGlobal`
       })
 
       expect(create).toThrow()

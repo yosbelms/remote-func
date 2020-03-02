@@ -1,27 +1,9 @@
 import koaCompose, { Middleware, ComposedMiddleware } from 'koa-compose'
-import { mins, readOnly, getConsole, readOnlyTraps, deepMap, isFunction } from './util'
+import { mins, deepMap, isFunction } from './util'
 import { EvalError } from './error'
 import { readModule, contextifyApi } from './api'
 import { Cache } from './cache'
 import { createFuntainer, Funtainer } from '../funtainer'
-
-const publicObjectStaticPropsMap = new Map([
-  ['keys', true],
-  ['values', true],
-  ['hasOwnProperty', true],
-  ['fromEntries', true],
-  ['assign', true],
-  ['create', true],
-])
-
-const objectTraps = {
-  get(target: any, prop: any, receiver: any) {
-    return (publicObjectStaticPropsMap.has(prop)
-      ? readOnlyTraps.get(target, prop, receiver)
-      : void 0
-    )
-  }
-}
 
 export interface EngineConfig {
   api: any
@@ -34,8 +16,7 @@ export class Engine {
   private config: Partial<EngineConfig>
   private funtainerCache: Cache<Funtainer>
   private composedMiddleware: ComposedMiddleware<any>
-  private funtainerGlobalNames: string[]
-  private readOnlyNatives: { [k: string]: any }
+  private apiKeys: string[]
   private api: any
 
   constructor(config: Partial<EngineConfig>) {
@@ -44,33 +25,10 @@ export class Engine {
       ...config,
     }
 
-    this.readOnlyNatives = {
-      console: readOnly(getConsole()),
-
-      Object: readOnly(Object, objectTraps),
-      Promise: readOnly(Promise),
-      Date: readOnly(Date),
-      Array: readOnly(Array),
-      Number: readOnly(Number),
-      String: readOnly(String),
-
-      // errors
-      Error: readOnly(Error),
-      EvalError: readOnly(EvalError),
-      RangeError: readOnly(RangeError),
-      ReferenceError: readOnly(ReferenceError),
-      SyntaxError: readOnly(SyntaxError),
-      TypeError: readOnly(TypeError),
-      URIError: readOnly(URIError),
-    }
-
     this.composedMiddleware = koaCompose(this.config.middlewares || [])
     this.funtainerCache = new Cache()
     this.api = readModule(config.api || {})
-    this.funtainerGlobalNames = [
-      ...Object.keys(this.readOnlyNatives),
-      ...Object.keys(this.api),
-    ]
+    this.apiKeys = Object.keys(this.api)
   }
 
   async run(source: string, args?: any[], context?: any): Promise<any> {
@@ -82,7 +40,7 @@ export class Engine {
     if (!funtainer) {
       try {
         funtainer = createFuntainer({
-          globalNames: this.funtainerGlobalNames,
+          globalNames: this.apiKeys,
           timeout: this.config.timeout,
           source,
         })
@@ -93,10 +51,7 @@ export class Engine {
     }
 
     const contextifedApi = contextifyApi(this.api, context)
-    const globals = {
-      ...this.readOnlyNatives,
-      ...contextifedApi,
-    }
+    const globals = { ...contextifedApi }
 
     return funtainer(args, globals)
   }
