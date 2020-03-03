@@ -31,6 +31,10 @@ export class Engine {
     this.apiKeys = Object.keys(this.api)
   }
 
+  getConfig(): Partial<EngineConfig> {
+    return { ...this.config }
+  }
+
   async run(source: string, args?: any[], context?: any): Promise<any> {
     return this.composedMiddleware(context, () => this.execute(source, args, context))
   }
@@ -58,7 +62,7 @@ export class Engine {
 
   getEndpointPaths(): string[] {
     const paths: string[] = []
-    deepMap(this.config.api, (value, _, path) => {
+    deepMap(this.getConfig().api, (value, _, path) => {
       if (isFunction(value)) {
         paths.push(path.join('.'))
       }
