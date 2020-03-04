@@ -57,6 +57,11 @@ export class Engine {
     const contextifedApi = contextifyApi(this.api, context)
     const globals = { ...contextifedApi }
 
+    // add api to context
+    if (context) {
+      context.api = contextifedApi
+    }
+
     return funtainer(args, globals)
   }
 
