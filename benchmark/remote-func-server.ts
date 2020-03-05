@@ -1,10 +1,10 @@
 import express from 'express'
-import { expressHandler, createEngine } from '../server'
-import { query } from './api'
+import { expressHandler, createEngine, createApi } from '../server'
+import api from './api'
 
 const app = express()
 const engine = createEngine({
-  api: { query },
+  api,
 })
 app.use('/r-func', expressHandler(engine))
 app.listen(5000, () => {

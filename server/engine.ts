@@ -1,12 +1,12 @@
 import koaCompose, { Middleware, ComposedMiddleware } from 'koa-compose'
-import { mins, deepMap, isFunction } from './util'
+import { mins } from './util'
 import { EvalError } from './error'
-import { readModule, contextifyApi } from './api'
+import { UnfoldedApi, FoldApiType, readApi, instantiateApi } from './api'
 import { Cache } from './cache'
 import { createFuntainer, Funtainer } from '../funtainer'
 
 export interface EngineConfig {
-  api: any
+  api: UnfoldedApi
   middlewares: Middleware<any>[]
   timeout: number
   filename: string
@@ -16,8 +16,8 @@ export class Engine {
   private config: Partial<EngineConfig>
   private funtainerCache: Cache<Funtainer>
   private composedMiddleware: ComposedMiddleware<any>
+  private api: UnfoldedApi
   private apiKeys: string[]
-  private api: any
 
   constructor(config: Partial<EngineConfig>) {
     this.config = {
@@ -25,9 +25,10 @@ export class Engine {
       ...config,
     }
 
+    const api = config.api || {}
     this.composedMiddleware = koaCompose(this.config.middlewares || [])
     this.funtainerCache = new Cache()
-    this.api = readModule(config.api || {})
+    this.api = readApi(api as unknown as FoldApiType<typeof api>)
     this.apiKeys = Object.keys(this.api)
   }
 
@@ -54,26 +55,23 @@ export class Engine {
       }
     }
 
-    const contextifedApi = contextifyApi(this.api, context)
-    const globals = { ...contextifedApi }
-
-    // add api to context
-    if (context) {
-      context.api = contextifedApi
-    }
-
+    const contextifiedServices = instantiateApi(this.api, context)
+    const globals = { ...contextifiedServices }
     return funtainer(args, globals)
   }
 
   getEndpointPaths(): string[] {
     const paths: string[] = []
-    deepMap(this.getConfig().api, (value, _, path) => {
-      if (isFunction(value)) {
-        paths.push(path.join('.'))
-      }
+    const api = instantiateApi(this.api)
+    Object.keys(api).forEach(serviceName => {
+      const service = api[serviceName]
+      Object.keys(service).forEach(endpointName => {
+        paths.push(`${serviceName}.${endpointName}`)
+      })
     })
     return paths
   }
+
 }
 
 export const createEngine = (config: Partial<EngineConfig> = {}): Engine => {

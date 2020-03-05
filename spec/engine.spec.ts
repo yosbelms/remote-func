@@ -1,7 +1,7 @@
 import { createEngine, Engine } from '../server/engine'
 import 'jasmine'
 import { EvalError, TimeoutError } from '../server/error'
-import { endpoint } from '../server/api'
+import { createService, createApi } from '../server/api'
 import { secs } from '../server/util'
 
 describe('engine', () => {
@@ -42,15 +42,19 @@ describe('engine', () => {
 
   it('should use the same context for all calls inside a remote function', (done) => {
     engine = createEngine({
-      api: {
-        f1: endpoint(ctx => () => ctx),
-        f2: endpoint(ctx => () => ctx),
-      }
+      api: createApi({
+        s1: createService(ctx => ({
+          endpoint: () => ctx
+        })),
+        s2: createService(ctx => ({
+          endpoint: () => ctx
+        })),
+      })
     })
 
     const rf = `async () => {
-      const r1 = await f1()
-      const r2 = await f2()
+      const r1 = await s1.endpoint()
+      const r2 = await s2.endpoint()
       return r1 === r2
     }`
 
@@ -78,18 +82,20 @@ describe('engine', () => {
 
     engine = createEngine({
       middlewares,
-      api: {
-        f1: endpoint((ctx: any) => (x: number) => {
-          ctx.newCtxProp += x
-          return ctx.newCtxProp
-        })
-      },
+      api: createApi({
+        s1: createService((ctx: any) => ({
+          endpoint: (x: number) => {
+            ctx.newCtxProp += x
+            return ctx.newCtxProp
+          }
+        }))
+      }),
     })
 
     engine.run(`async () => {
-      await f1(5)
-      await f1(5)
-      return await f1(1)
+      await s1.endpoint(5)
+      await s1.endpoint(5)
+      return await s1.endpoint(1)
     }`, [], context).then(r => {
       expect(r).toBe(11)
       expect(context.newCtxProp).toBe(0)
@@ -99,22 +105,19 @@ describe('engine', () => {
 
   it('should return endpoints paths', () => {
     engine = createEngine({
-      api: {
-        endpoint: () => null,
-        nested: {
-          endpoint: () => null,
-          nested: {
-            endpoint: () => null,
-          },
-        },
-      }
+      api: createApi({
+        service: createService(() => ({
+          endpoint1: () => null,
+          endpoint2: () => null,
+        })),
+      })
     })
 
     const paths = engine.getEndpointPaths()
+
     expect(paths).toEqual([
-      'endpoint',
-      'nested.endpoint',
-      'nested.nested.endpoint',
+      'service.endpoint1',
+      'service.endpoint2',
     ])
   })
 

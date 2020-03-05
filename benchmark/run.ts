@@ -23,7 +23,8 @@ const remoteFuncLoad = () => {
     source,
     args: [1]
   }
-  const url = `http://localhost:5000?requests=${encodeURIComponent(JSON.stringify(request))}`
+  const url = `http://localhost:5000/r-func?requests=${encodeURIComponent(JSON.stringify(request))}`
+  console.log(url)
   return autocannon({ url, duration: benchmarkDuration })
 }
 
@@ -40,6 +41,7 @@ const gqlLoad = () => {
   `;
   const graphQLvariables = `{"id": 1}`;
   const url = `http://localhost:4000/graphql?query=${encodeURIComponent(graphQLquery)}&variables=${encodeURIComponent(graphQLvariables)}&operationName=GetBookById`
+  console.log(url)
   return autocannon({ url, duration: benchmarkDuration })
 }
 

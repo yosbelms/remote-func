@@ -1,3 +1,4 @@
+import { createService } from '../../server'
 
-export const posts = {}
-export const comments = {}
+export const posts = createService(() => ({}))
+export const comments = createService(() => ({}))

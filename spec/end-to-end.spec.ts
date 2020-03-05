@@ -1,16 +1,26 @@
 import 'jasmine'
 import { createEngine, expressHandler, microHandler, Result } from '../server'
 import { createClient, httpHandler, func, bind } from '../client'
+import { createService, instantiateApi, createApi } from '../server/api'
 import fetch from 'node-fetch'
 
 import express from 'express'
 const micro = require('micro')
 
 const PORT = 7000
-const api = {
-  one: (): Result<number> => 1,
-  newDate: (): Result<Date> => new Date(),
+
+const mutateContextMiddleware = (ctx: any, next: Function) => {
+  ctx.newProp = 1
+  return next()
 }
+
+const api = createApi({
+  service: createService((ctx: any) => ({
+    mutateContext: () => ctx.newProp,
+    one: (): Result<number> => 1,
+    newDate: (): Result<Date> => new Date(),
+  }))
+})
 
 const servers: any = {
   // ExpressJS
@@ -18,7 +28,10 @@ const servers: any = {
     server: void 0 as any,
     beforeAll(done: any) {
       const app = express()
-      const engine = createEngine({ api })
+      const engine = createEngine({
+        api,
+        middlewares: [mutateContextMiddleware]
+      })
       app.use('/', expressHandler(engine))
       this.server = app.listen(PORT, done)
     },
@@ -30,7 +43,10 @@ const servers: any = {
   micro: {
     server: void 0 as any,
     beforeAll(done: any) {
-      const engine = createEngine({ api })
+      const engine = createEngine({
+        api,
+        middlewares: [mutateContextMiddleware]
+      })
       this.server = micro(microHandler(engine))
       this.server.listen(PORT, done)
     },
@@ -53,9 +69,21 @@ describe('End to End:', () => {
             fetch: fetch as any,
           })
         })
-        const rFunc = bind(client, func(`async () => one()`))
+        const rFunc = bind(client, func(`async () => service.one()`))
 
-        expect(await rFunc()).toBe(api.one())
+        expect(await rFunc()).toBe(instantiateApi(api).service.one())
+      })
+
+      it('should execute functions in the server', async () => {
+        const client = createClient({
+          handler: httpHandler({
+            url: `http://localhost:${PORT}/`,
+            fetch: fetch as any,
+          })
+        })
+        const rFunc = bind(client, func(`async () => service.mutateContext()`))
+
+        expect(await rFunc()).toBe(1)
       })
 
       it('should execute functions in the server using GET', async () => {
@@ -67,9 +95,9 @@ describe('End to End:', () => {
             },
           }),
         })
-        const rFunc = bind(client, func(`async () => one()`))
+        const rFunc = bind(client, func(`async () => service.one()`))
 
-        expect(await rFunc()).toBe(api.one())
+        expect(await rFunc()).toBe(instantiateApi(api).service.one())
       })
 
       afterAll(server.afterAll.bind(server))

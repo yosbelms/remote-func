@@ -1,49 +1,49 @@
 import 'jasmine'
-import { endpoint, isEndpoint, readModule, contextifyApi } from '../server/api'
+import { createService, readApi, instantiateApi, instantiateService, isService, createApi, UnfoldedApi, FoldApiType } from '../server/api'
 import * as fixtureApiModule from './fixtures/apiModule'
 
 const ctxExample = { prop: 1 }
-const apiExample = {
-  func: (a: any) => a,
-  endpoint: endpoint(() => (a: any) => a),
-  endpointReturnCtx: endpoint((ctx) => () => ctx),
-}
+const exampleService = createService((ctx) => ({
+  endpoint: (a: any) => a,
+  endpointReturnCtx: () => ctx,
+}))
+
 describe('api', () => {
   it('should recognize api module', () => {
-    const apiModule = readModule(fixtureApiModule)
+    const api = createApi(fixtureApiModule)
+    const apiModule = readApi(api as unknown as FoldApiType<typeof api>)
     expect(apiModule).toEqual(fixtureApiModule)
   })
 
   it('can not be mutated', () => {
-    const api = contextifyApi(apiExample)
-    api.func = () => { }
-    expect(api.func(1)).toBe(1)
+    const service = instantiateApi(createApi({ exampleService }))
+    service.exampleService.endpoint = () => { }
+    expect(service.exampleService.endpoint(1)).toBe(1)
   })
 
   describe('endopoint', () => {
-    it('should create endpoint', () => {
-      const ep = endpoint(() => () => { })
-      expect(isEndpoint(ep)).toBe(true)
+    it('should create service', () => {
+      const s = createService(() => ({}))
+      expect(isService(s)).toBe(true)
     })
   })
 
-  describe('contextifyApi', () => {
+  describe('instanceService', () => {
     it('should make functions available', () => {
-      const contextifiedApi = contextifyApi(apiExample, ctxExample)
-      expect(contextifiedApi.func(0)).toBe(0)
-      expect(contextifiedApi.endpoint(0)).toBe(0)
+      const serviceInstance = instantiateService(exampleService, ctxExample)
+      expect(serviceInstance.endpoint(0)).toBe(0)
     })
 
     it('endpoint can read context', () => {
-      const contextifiedApi = contextifyApi(apiExample, ctxExample)
-      expect(contextifiedApi.endpointReturnCtx()).toEqual(ctxExample)
+      const serviceInstance = instantiateService(exampleService, ctxExample)
+      expect(serviceInstance.endpointReturnCtx()).toEqual(ctxExample)
     })
 
     it('returned values should be cloned', () => {
       const val = { a: 1, b: 2 }
-      const contextifiedApi = contextifyApi(apiExample, ctxExample)
-      expect(contextifiedApi.func(val)).toEqual(val)
-      expect(contextifiedApi.func(val)).not.toBe(val)
+      const serviceInstance = instantiateService(exampleService, ctxExample)
+      expect(serviceInstance.endpoint(val)).toEqual(val)
+      expect(serviceInstance.endpoint(val)).not.toBe(val)
     })
   })
 

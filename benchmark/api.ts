@@ -1,4 +1,4 @@
-import { endpoint } from '../server'
+import { createService, createApi } from '../server/api'
 const data = require('./data.json')
 
 type Author = {
@@ -13,14 +13,15 @@ type Book = {
   author: Author
 }
 
-export const query = {
-  bookById: endpoint(_ => async (id: number) => {
-    return data.books.find((b: any) => b.id = id)
-  }),
-  authorByBook: endpoint(_ => async (book: Book) => {
-    if (book && book.authorId !== void 0) {
-      return data.authors.find((a: Author) => a.id = book.authorId)
-    }
-  }),
-}
-
+export default createApi({
+  query: createService(() => ({
+    async bookById(id: number) {
+      return data.books.find((b: any) => b.id = id)
+    },
+    async authorByBook(book: Book) {
+      if (book && book.authorId !== void 0) {
+        return data.authors.find((a: Author) => a.id = book.authorId)
+      }
+    },
+  }))
+})

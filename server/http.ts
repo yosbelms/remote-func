@@ -9,7 +9,6 @@ export interface RequestContext {
   response: string
   source: string
   args: any[]
-  api: any
 }
 
 export interface HttpHandlerInterface {

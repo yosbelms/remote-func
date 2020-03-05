@@ -3,7 +3,7 @@ import path from 'path'
 import globby from 'globby'
 import makeDir from 'make-dir'
 
-export const importApiModuleDts = async (apiModulePath: string, destinationDir: string) => {
+export const importModuleDts = async (apiModulePath: string, destinationDir: string) => {
   const sourcePath = path.resolve(apiModulePath)
   destinationDir = path.resolve(destinationDir)
   const dtsDir = await makeDir(path.join(destinationDir, '/dts'))
