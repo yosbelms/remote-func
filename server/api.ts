@@ -34,18 +34,18 @@ export const isApi = (api: any) => {
   return api && (api as any)[API]
 }
 
-export const createService = <Ctx, Body>(factory: (ctx?: Ctx) => Body): typeof factory => {
+export const createService = <Ctx, Body>(factory: (ctx?: Ctx) => Body): Body => {
   (factory as any)[SERVICE] = true
-  return factory
+  return factory as unknown as Body
 }
 
-export const createApi = <Api extends FoldedApi>(apiCfg: Api): UnfoldApiType<Api> => {
+export const createApi = <Api extends UnfoldedApi>(apiCfg: Api): Api => {
   (apiCfg as any)[API] = true
-  return apiCfg as UnfoldApiType<Api>
+  return apiCfg as Api
 }
 
-export const instantiateService = (service: Function, context?: any) => {
-  const serviceInstance = service(context)
+export const instantiateService = (service: EndpointsDict, context?: any) => {
+  const serviceInstance = (service as unknown as Function)(context)
   return readOnly(serviceInstance, {
     get(target: any, prop: any): any {
       const endpoint = target[prop]
