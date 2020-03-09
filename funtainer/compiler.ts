@@ -13,6 +13,7 @@ export const compile = (
   const globalsPlugin = createGlobalsPlugin(allowedGlobals)
 
   const out = babel.transform(src, {
+    highlightCode: false,
     plugins: [
       subsetPlugin,
       globalsPlugin,

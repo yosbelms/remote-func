@@ -5,6 +5,7 @@ import { createRuntime } from './runtime'
 import { compile } from './compiler'
 import { isValidIdentifier } from './util'
 import { readOnly, getConsole, readOnlyTraps } from '../server/util'
+const endent = require('endent')
 
 const defaultTimeout = 1 * 1000 * 60 // 1min
 const defaultMemoryLimit = 500 * 1024 * 1024 // 5Mb
@@ -91,11 +92,16 @@ export const createFuntainer = (config: Partial<FuntainerConfig> = {}): Funtaine
 
   const { code = '' } = compile(source, allowedNodeTypes, globalNames)
   const __globals = '__globals'
-  const resetContext = `const {${globalNames.join(', ')}} = ${__globals};`
+  const resetContext = endent`const {
+    ${globalNames.join(',\n')}
+  } = ${__globals};`
 
-  const transformedCode = `exports.default = (${__globals}) => {
-${resetContext} ${__globals} = void 0;
-return ${code}}`
+  const transformedCode = endent`exports.default = (${__globals}) => {
+    ${resetContext}
+    ${__globals} = void 0;
+
+    ${`return ${code}`}
+  }`
 
   const script = new Script(transformedCode, {
     filename,

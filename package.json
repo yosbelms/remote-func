@@ -30,6 +30,7 @@
     "@types/deep-freeze": "^0.1.2",
     "@types/koa-compose": "^3.2.5",
     "@types/node": "^12.12.14",
+    "endent": "^1.4.1",
     "globby": "^10.0.1",
     "koa-compose": "^4.1.0",
     "make-dir": "^3.0.0",
