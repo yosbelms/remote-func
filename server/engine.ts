@@ -1,13 +1,13 @@
 import koaCompose, { Middleware, ComposedMiddleware } from 'koa-compose'
 import { mins } from './util'
 import { EvalError } from './error'
-import { UnfoldedApi, FoldApiType, readApi, instantiateApi } from './api'
+import { UnfoldedApi, FoldApiType, readApi, instantiateApi, ServiceContext } from './api'
 import { Cache } from './cache'
 import { createFuntainer, Funtainer } from '../funtainer'
 
 export interface EngineConfig {
   api: UnfoldedApi
-  middlewares: Middleware<any>[]
+  middlewares: Middleware<ServiceContext>[]
   timeout: number
   filename: string
 }
@@ -15,7 +15,7 @@ export interface EngineConfig {
 export class Engine {
   private config: Partial<EngineConfig>
   private funtainerCache: Cache<Funtainer>
-  private composedMiddleware: ComposedMiddleware<any>
+  private composedMiddleware: ComposedMiddleware<ServiceContext>
   private api: UnfoldedApi
   private apiKeys: string[]
 

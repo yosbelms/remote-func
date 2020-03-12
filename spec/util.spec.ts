@@ -38,7 +38,7 @@ describe('util', () => {
       })
     })
 
-    fit('should stop on max depth', () => {
+    it('should stop on max depth', () => {
       const depth = 10
       const source = { depth: 1, source: {} } as any
       source.source = source

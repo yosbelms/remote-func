@@ -1,11 +1,16 @@
 import 'jasmine'
-import { createService, readApi, instantiateApi, instantiateService, isService, createApi, UnfoldedApi, FoldApiType } from '../server/api'
+import { createService, readApi, instantiateApi, instantiateService, isService, createApi, FoldApiType, ServiceContext } from '../server/api'
 import * as fixtureApiModule from './fixtures/apiModule'
 
+interface Context extends ServiceContext {
+  user: { username: string }
+}
+
 const ctxExample = { prop: 1 }
-const exampleService = createService((ctx) => ({
+const exampleService = createService((ctx: Context) => ({
   endpoint: (a: any) => a,
   endpointReturnCtx: () => ctx,
+  endpointCtxTypeAssert: () => ctx.user.username,
 }))
 
 describe('api', () => {

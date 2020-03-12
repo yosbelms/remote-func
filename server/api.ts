@@ -5,6 +5,11 @@ const API = Symbol('api')
 
 export type Result<T> = DeepClone<T>
 
+export interface ServiceContext {
+  source: string
+  args: any[]
+}
+
 interface EndpointsDict {
   [endpointName: string]: (...args: any[]) => any
 }
@@ -34,9 +39,9 @@ export const isApi = (api: any) => {
   return api && (api as any)[API]
 }
 
-export const createService = <Ctx, Body>(factory: (ctx?: Ctx) => Body): Body => {
-  (factory as any)[SERVICE] = true
-  return factory as unknown as Body
+export const createService = <Ctx extends ServiceContext, Body>(serviceFactory: (ctx: Ctx) => Body): Body => {
+  (serviceFactory as any)[SERVICE] = true
+  return serviceFactory as unknown as Body
 }
 
 export const createApi = <Api extends UnfoldedApi>(apiCfg: Api): Api => {
