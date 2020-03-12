@@ -1,6 +1,6 @@
 import 'jasmine'
-import { createEngine, expressHandler, microHandler, Result } from '../server'
-import { createClient, httpHandler, func, bind } from '../client'
+import { createEngine, expressHandler, microHandler, Result, Engine } from '../server'
+import { createClient, httpHandler, func, bind, engineHandler } from '../client'
 import { createService, instantiateApi, createApi } from '../server/api'
 import fetch from 'node-fetch'
 
@@ -102,5 +102,28 @@ describe('End to End:', () => {
 
       afterAll(server.afterAll.bind(server))
     })
+  })
+})
+
+describe('Engine Handler', () => {
+  let engine: Engine | void
+  beforeAll((done) => {
+    engine = createEngine({
+      api,
+      middlewares: [mutateContextMiddleware]
+    })
+    done()
+  })
+
+  it('should communicate', async () => {
+    const client = createClient({
+      handler: engineHandler(engine as Engine)
+    })
+    const rFunc = bind(client, func(`async () => service.one()`))
+    expect(await rFunc()).toBe(instantiateApi(api).service.one())
+  })
+
+  afterAll(() => {
+    engine = void 0
   })
 })
