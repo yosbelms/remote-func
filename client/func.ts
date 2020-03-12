@@ -14,14 +14,6 @@ export interface BoundRemoteFunction extends Function {
   remoteFunction: RemoteFunction
 }
 
-const stringifySourceInput = (statics: TemplateStringsArray | Function | string): string => {
-  const _type = typeof statics
-  if (_type === 'function') return statics.toString()
-  if (_type === 'string') return statics as string
-  if (Array.isArray(statics)) return statics.join('')
-  return ''
-}
-
 const createRemoteFunc = (source: string): RemoteFunction => {
   const remoteFunction = () => {
     throw new Error('Unbound remote function')
@@ -38,9 +30,17 @@ export interface Func {
   (str: string): RemoteFunction
 }
 
-export const func: Func = (statics: TemplateStringsArray | Function | string): RemoteFunction => {
-  const source = stringifySourceInput(statics)
-  return createRemoteFunc(source)
+export const func: Func = (sourceInput: TemplateStringsArray | Function | string): RemoteFunction => {
+  if (typeof sourceInput === 'string') {
+    sourceInput = sourceInput
+  } else if (Array.isArray(sourceInput)) {
+    sourceInput = sourceInput.join('')
+  } else if (typeof sourceInput === 'function') {
+    throw new Error(`wrong use of 'func', use the bundled babel plugin`)
+  } else {
+    throw new Error(`wrong use of 'func', unsupported source type`)
+  }
+  return createRemoteFunc(sourceInput)
 }
 
 export const bind = <T>(client: Client, remoteFunction: T & RemoteFunction): T & BoundRemoteFunction => {
