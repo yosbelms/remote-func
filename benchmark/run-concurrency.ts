@@ -212,7 +212,7 @@ group('Remote Func concurrency', () => {
   }`)
 
 
-  action('Control Query', async () => fetch(remoteFuncAuthorsAndBooks(1)))
+  action('*ControlQuery', async () => fetch(remoteFuncAuthorsAndBooks(1)))
   action('FastIncreasingHeap', async () => fetch(rf1()))
   action('ForLoop', async () => fetch(rf2()))
   action('LongArray', async () => fetch(rf3()))
