@@ -37,5 +37,20 @@ describe('util', () => {
         done()
       })
     })
+
+    fit('should stop on max depth', () => {
+      const depth = 10
+      const source = { depth: 1, source: {} } as any
+      source.source = source
+
+      let cloned = deepClone(source, depth)
+      let count = 0
+      while (cloned) {
+        count += cloned.depth
+        cloned = cloned.source
+      }
+
+      expect(count).toBe(depth)
+    })
   })
 })

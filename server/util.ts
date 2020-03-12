@@ -59,7 +59,10 @@ export type DeepClone<T> = (
   { [P in keyof T]: DeepClone<T[P]> }
 )
 
-export const deepClone = <T extends any, R extends DeepClone<T>>(o: T): R => {
+const MAX_DEPTH = 100
+export const deepClone = <T extends any, R extends DeepClone<T>>(o: T, maxDepth: number = MAX_DEPTH): R => {
+  if (maxDepth <= 0) return void 0 as R
+
   // if not array or object or is null return self
   if (isFunction(o)) return void 0 as R
   if (!isObject(o)) return o as R
@@ -76,7 +79,7 @@ export const deepClone = <T extends any, R extends DeepClone<T>>(o: T): R => {
 
   // promise
   if (isThenable(o)) {
-    return o.then((o: any) => deepClone(o))
+    return o.then((o: any) => deepClone(o, maxDepth--))
   }
 
   // array
@@ -84,7 +87,7 @@ export const deepClone = <T extends any, R extends DeepClone<T>>(o: T): R => {
     let len = o.length
     let newO = []
     for (let i = 0; i < len; i++) {
-      newO[i] = deepClone(o[i])
+      newO[i] = deepClone(o[i], maxDepth--)
     }
     return newO as R
   }
@@ -93,7 +96,7 @@ export const deepClone = <T extends any, R extends DeepClone<T>>(o: T): R => {
   let newO: any = {}
   for (let propName in o) {
     if ((o as Object).hasOwnProperty(propName)) {
-      newO[propName] = deepClone(o[propName])
+      newO[propName] = deepClone(o[propName], maxDepth--)
     }
   }
   return newO as R
