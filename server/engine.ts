@@ -3,7 +3,7 @@ import { mins } from './util'
 import { EvalError } from './error'
 import { UnfoldedApi, FoldApiType, readApi, instantiateApi, ServiceContext } from './api'
 import { Cache } from './cache'
-import { createFuntainer, Funtainer } from '../funtainer'
+import { createSefunc, Sefunc } from '../sefunc'
 
 export interface EngineConfig {
   api: UnfoldedApi
@@ -14,7 +14,7 @@ export interface EngineConfig {
 
 export class Engine {
   private config: Partial<EngineConfig>
-  private funtainerCache: Cache<Funtainer>
+  private sefuncCache: Cache<Sefunc>
   private composedMiddleware: ComposedMiddleware<ServiceContext>
   private api: UnfoldedApi
   private apiKeys: string[]
@@ -27,7 +27,7 @@ export class Engine {
 
     const api = config.api || {}
     this.composedMiddleware = koaCompose(this.config.middlewares || [])
-    this.funtainerCache = new Cache()
+    this.sefuncCache = new Cache()
     this.api = readApi(api as unknown as FoldApiType<typeof api>)
     this.apiKeys = Object.keys(this.api)
   }
@@ -41,15 +41,15 @@ export class Engine {
   }
 
   private execute(source: string, args?: any[], context?: any) {
-    let funtainer = this.funtainerCache.get(source)
-    if (!funtainer) {
+    let sefunc = this.sefuncCache.get(source)
+    if (!sefunc) {
       try {
-        funtainer = createFuntainer({
+        sefunc = createSefunc({
           globalNames: this.apiKeys,
           timeout: this.config.timeout,
           source,
         })
-        this.funtainerCache.set(source, funtainer)
+        this.sefuncCache.set(source, sefunc)
       } catch (err) {
         throw new EvalError(String(err.stack))
       }
@@ -57,7 +57,7 @@ export class Engine {
 
     const contextifiedServices = instantiateApi(this.api, context)
     const globals = { ...contextifiedServices }
-    return funtainer(args, globals)
+    return sefunc(args, globals)
   }
 
   getEndpointPaths(): string[] {

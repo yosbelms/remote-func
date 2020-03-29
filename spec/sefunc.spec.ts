@@ -1,30 +1,30 @@
 import 'jasmine'
-import { createFuntainer } from '../funtainer'
+import { createSefunc } from '../sefunc'
 import { TimeoutError, MemoryLimitError } from '../server/error'
 
-describe('Funtainer', () => {
+describe('Sefunc', () => {
 
   describe('should throw', () => {
 
     it('if it is not an async function', async () => {
-      const create = () => createFuntainer({
+      const create = () => createSefunc({
         source: `const x = 1`
       })
       expect(create).toThrow()
     })
 
     it('on timeout', async () => {
-      const funtainer = createFuntainer({
+      const sefunc = createSefunc({
         timeout: 10,
         source: `async() => {
           while(true){}
         }`
       })
-      expectAsync(funtainer()).toBeRejectedWith(TimeoutError)
+      expectAsync(sefunc()).toBeRejectedWith(TimeoutError)
     })
 
     it('on memory limit exceed', async () => {
-      const funtainer = createFuntainer({
+      const sefunc = createSefunc({
         memoryLimit: 100,
         source: `async() => {
           const arr = []
@@ -33,14 +33,14 @@ describe('Funtainer', () => {
       })
 
       try {
-        await funtainer()
+        await sefunc()
       } catch (e) {
         expect(e.constructor).toBe(MemoryLimitError)
       }
     })
 
     it('on access to undeclared global', async () => {
-      const create = () => createFuntainer({
+      const create = () => createSefunc({
         globalNames: [],
         source: `async() => UndeclaredGlobal`
       })
@@ -49,12 +49,12 @@ describe('Funtainer', () => {
     })
 
     it('on reassign global', async () => {
-      const funtainer = createFuntainer({
+      const sefunc = createSefunc({
         globalNames: ['Object'],
         source: `async() => Object = null`
       })
 
-      expectAsync(funtainer(void 0, { Object })).toBeRejected()
+      expectAsync(sefunc(void 0, { Object })).toBeRejected()
     })
 
   })
@@ -62,7 +62,7 @@ describe('Funtainer', () => {
   // bug
   it('should not properly call a function (non member expression) when its arguments are member expressions', async () => {
     const len = 1
-    const funtainer = createFuntainer({
+    const sefunc = createSefunc({
       globalNames: ['Array'],
       source: `async(len) => {
         const obj = { len: len }
@@ -70,7 +70,7 @@ describe('Funtainer', () => {
       }`
     })
 
-    const result = await funtainer([len], { Array })
+    const result = await sefunc([len], { Array })
     expect(result.length).toEqual(len)
   })
 
