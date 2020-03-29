@@ -5,10 +5,10 @@ import { ServiceContext } from './api'
 import { createParser, createStringifier } from '../client/json-stream'
 import { RequestMessage, ResponseMessage } from '../client/message'
 
-export interface RequestContext extends ServiceContext {
+export type RequestContext = ServiceContext<{
   request: any
   response: string
-}
+}>
 
 export interface HttpHandlerInterface {
   engine?: Engine

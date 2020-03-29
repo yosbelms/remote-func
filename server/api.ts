@@ -5,10 +5,10 @@ const API = Symbol('api')
 
 export type Result<T> = DeepClone<T>
 
-export interface ServiceContext {
+export type ServiceContext<Ctx extends object = {}> = ({
   source: string
   args: any[]
-}
+} & Ctx)
 
 interface EndpointsDict {
   [endpointName: string]: (...args: any[]) => any
