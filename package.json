@@ -1,6 +1,6 @@
 {
   "name": "remote-func",
-  "version": "0.4.11",
+  "version": "0.4.12",
   "description": "JavaScript as the query language for your API",
   "main": "client/index.js",
   "repository": "https://github.com/yosbelms/remote-func",
@@ -20,7 +20,7 @@
     "clean": "rm -rf **/*.js **/*.js.map **/*.d.ts **/*.d.ts.map server/**/*.js  server/**/*.js.map server/**/*.d.ts server/**/*.d.ts.map .nyc_output",
     "build": "tsc -p ./tsconfig.nodejs.json && tsc -p ./tsconfig.browser.json",
     "watch": "npm run clean && npx sane 'npm run build' --glob='*.ts'",
-    "prepublish": "npm run clean && npm run build && npm run test"
+    "prepublishOnly": "npm run clean && npm run build && npm run test"
   },
   "author": "yosbelms",
   "license": "ISC",
@@ -31,15 +31,15 @@
     "@types/koa-compose": "^3.2.5",
     "@types/node": "^12.12.32",
     "endent": "^1.4.1",
-    "globby": "^10.0.2",
+    "globby": "^11.0.0",
     "koa-compose": "^4.1.0",
     "make-dir": "^3.0.2",
     "p-defer": "^3.0.0",
-    "p-settle": "^3.1.0",
+    "p-settle": "^4.0.1",
     "terser": "^4.6.7"
   },
   "devDependencies": {
-    "@istanbuljs/nyc-config-typescript": "^0.1.3",
+    "@istanbuljs/nyc-config-typescript": "^1.0.1",
     "@types/glob": "^7.1.1",
     "@types/jasmine": "^3.5.10",
     "@types/node-fetch": "^2.5.5",
@@ -50,9 +50,9 @@
     "jasmine-ts": "^0.3.0",
     "micro": "^9.3.4",
     "node-fetch": "^2.6.0",
-    "nyc": "^14.1.1",
+    "nyc": "^15.0.0",
     "sane": "^4.1.0",
-    "ts-node": "^8.8.1",
+    "ts-node": "^8.0.0",
     "typescript": "^3.8.3"
   },
   "engines": {
