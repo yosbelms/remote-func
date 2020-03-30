@@ -17,7 +17,7 @@
   "scripts": {
     "test": "npx jasmine-ts",
     "coverage": "npm run build && npx nyc -e .ts jasmine-ts",
-    "clean": "rm -rf **/*.js **/*.js.map **/*.d.ts **/*.d.ts.map server/**/*.js  server/**/*.js.map server/**/*.d.ts server/**/*.d.ts.map .nyc_output",
+    "clean": "rm -rf **/*.js **/*.js.map **/*.d.ts **/*.d.ts.map server/**/*.js  server/**/*.js.map server/**/*.d.ts server/**/*.d.ts.map .nyc_output && npm i",
     "build": "tsc -p ./tsconfig.nodejs.json && tsc -p ./tsconfig.browser.json",
     "watch": "npm run clean && npx sane 'npm run build' --glob='*.ts'",
     "prepublishOnly": "npm run clean && npm run build && npm run test"
