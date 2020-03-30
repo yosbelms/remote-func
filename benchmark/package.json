@@ -19,7 +19,7 @@
     "colors": "^1.4.0",
     "express": "^4.17.1",
     "node-fetch": "^2.6.0",
-    "p-settle": "^3.1.0",
+    "p-settle": "^4.0.1",
     "p-timeout": "^3.2.0",
     "ts-node": "^8.6.2"
   }
