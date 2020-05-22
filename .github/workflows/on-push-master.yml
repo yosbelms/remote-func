@@ -25,16 +25,17 @@ jobs:
     - name: Setup Node.js environment
       uses: actions/setup-node@v1.4.2
       with:
-        # Set always-auth in npmrc
-        # Version Spec of the version to use.  Examples: 10.x, 10.15.1, >=10.15.0
         node-version: 12.x
-        # Optional registry to set up for auth. Will set the registry in a project level .npmrc and .yarnrc file, and set up auth to read in from env.NODE_AUTH_TOKEN
 
-    # Runs a single command using the runners shell
-    - name: Run a one-line script
-      run: npm i
+    - name: Install deps
+      run: |
+        npm i
+        cd benchmark
+        npm i
+        cd ..
       
-    # Runs a single command using the runners shell
-    - name: Run a one-line script
-      run: npm run prepublishOnly
-    
+    - name: Build
+      run: npm run build
+
+    - name: Test
+      run: npm run test
