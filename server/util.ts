@@ -69,17 +69,17 @@ export const deepClone = <T extends any, R extends DeepClone<T>>(o: T, maxDepth:
 
   // date
   if ((o as any) instanceof Date) {
-    return new Date(o.getTime()) as R
+    return new Date((o as any).getTime()) as R
   }
 
   // toJSON
-  if (isFunction(o.toJSON)) {
-    o = o.toJSON()
+  if (isFunction((o as any).toJSON)) {
+    o = (o as any).toJSON()
   }
 
   // promise
   if (isThenable(o)) {
-    return o.then((o: any) => deepClone(o, maxDepth--))
+    return (o as any).then((o: any) => deepClone(o, maxDepth--))
   }
 
   // array
