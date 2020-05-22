@@ -1,4 +1,4 @@
-export * from './api'
+export * from './service'
 export * from './engine'
 export * from './http'
 export * from './handlers/express'

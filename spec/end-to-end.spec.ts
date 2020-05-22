@@ -1,7 +1,7 @@
 import 'jasmine'
 import { createEngine, expressHandler, microHandler, Result, Engine } from '../server'
 import { createClient, httpHandler, func, bind, engineHandler } from '../client'
-import { createService, instantiateApi, createApi } from '../server/api'
+import { createService, instantiateServices } from '../server/service'
 import fetch from 'node-fetch'
 
 import express from 'express'
@@ -14,13 +14,13 @@ const mutateContextMiddleware = (ctx: any, next: Function) => {
   return next()
 }
 
-const api = createApi({
+const services = {
   service: createService((ctx: any) => ({
     mutateContext: () => ctx.newProp,
     one: (): Result<number> => 1,
     newDate: (): Result<Date> => new Date(),
   }))
-})
+}
 
 const servers: any = {
   // ExpressJS
@@ -29,7 +29,7 @@ const servers: any = {
     beforeAll(done: any) {
       const app = express()
       const engine = createEngine({
-        api,
+        services,
         middlewares: [mutateContextMiddleware]
       })
       app.use('/', expressHandler(engine))
@@ -44,7 +44,7 @@ const servers: any = {
     server: void 0 as any,
     beforeAll(done: any) {
       const engine = createEngine({
-        api,
+        services,
         middlewares: [mutateContextMiddleware]
       })
       this.server = micro(microHandler(engine))
@@ -71,7 +71,7 @@ describe('End to End:', () => {
         })
         const rFunc = bind(client, func(`async () => service.one()`))
 
-        expect(await rFunc()).toBe(instantiateApi(api).service.one())
+        expect(await rFunc()).toBe(instantiateServices(services).service.one())
       })
 
       it('should execute functions in the server', async () => {
@@ -97,7 +97,7 @@ describe('End to End:', () => {
         })
         const rFunc = bind(client, func(`async () => service.one()`))
 
-        expect(await rFunc()).toBe(instantiateApi(api).service.one())
+        expect(await rFunc()).toBe(instantiateServices(services).service.one())
       })
 
       afterAll(server.afterAll.bind(server))
@@ -109,7 +109,7 @@ describe('Engine Handler', () => {
   let engine: Engine | void
   beforeAll((done) => {
     engine = createEngine({
-      api,
+      services,
       middlewares: [mutateContextMiddleware]
     })
     done()
@@ -120,7 +120,7 @@ describe('Engine Handler', () => {
       handler: engineHandler(engine as Engine)
     })
     const rFunc = bind(client, func(`async () => service.one()`))
-    expect(await rFunc()).toBe(instantiateApi(api).service.one())
+    expect(await rFunc()).toBe(instantiateServices(services).service.one())
   })
 
   afterAll(() => {

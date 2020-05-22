@@ -1,7 +1,7 @@
 import pSettle from 'p-settle'
 import { Engine, createEngine } from './engine'
 import { BaseError, ErrorType } from './error'
-import { ServiceContext } from './api'
+import { ServiceContext } from './service'
 import { createParser, createStringifier } from '../client/json-stream'
 import { RequestMessage, ResponseMessage } from '../client/message'
 

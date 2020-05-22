@@ -1,7 +1,7 @@
 import { createEngine, Engine } from '../server/engine'
 import 'jasmine'
 import { EvalError, TimeoutError } from '../server/error'
-import { createService, createApi } from '../server/api'
+import { createService } from '../server/service'
 import { secs } from '../server/util'
 
 describe('engine', () => {
@@ -12,6 +12,14 @@ describe('engine', () => {
     engine = createEngine()
     const result = await engine.run('async (a) => a', [value])
     expect(result).toBe(value)
+  })
+
+  it('should import services module', async () => {
+    engine = createEngine({
+      servicesPath: __dirname + '/fixtures/servicesModule'
+    })
+    const result = await engine.run('async () => posts.getPost()')
+    expect(result).toBe('post')
   })
 
   it('should throw EvalError if source is not a function', (done) => {
@@ -42,14 +50,14 @@ describe('engine', () => {
 
   it('should use the same context for all calls inside a remote function', (done) => {
     engine = createEngine({
-      api: createApi({
+      services: {
         s1: createService(ctx => ({
           endpoint: () => ctx
         })),
         s2: createService(ctx => ({
           endpoint: () => ctx
         })),
-      })
+      }
     })
 
     const rf = `async () => {
@@ -82,14 +90,14 @@ describe('engine', () => {
 
     engine = createEngine({
       middlewares,
-      api: createApi({
+      services: {
         s1: createService((ctx: any) => ({
           endpoint: (x: number) => {
             ctx.newCtxProp += x
             return ctx.newCtxProp
           }
         }))
-      }),
+      },
     })
 
     engine.run(`async () => {
@@ -105,12 +113,12 @@ describe('engine', () => {
 
   it('should return endpoints paths', () => {
     engine = createEngine({
-      api: createApi({
+      services: {
         service: createService(() => ({
           endpoint1: () => null,
           endpoint2: () => null,
         })),
-      })
+      }
     })
 
     const paths = engine.getEndpointPaths()

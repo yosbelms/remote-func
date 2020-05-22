@@ -1,4 +1,4 @@
-import { createService, createApi } from '../server/api'
+import { createService } from '../server/service'
 const data = require('./data.json')
 
 type Author = {
@@ -13,7 +13,7 @@ type Book = {
   author: Author
 }
 
-export default createApi({
+export default {
   query: createService(() => ({
     async bookById(id: number) {
       return data.books.find((b: any) => b.id = id)
@@ -24,4 +24,4 @@ export default createApi({
       }
     },
   }))
-})
+}
