@@ -25,34 +25,35 @@
   "author": "yosbelms",
   "license": "ISC",
   "dependencies": {
-    "@types/babel__core": "^7.1.6",
+    "@babel/core": "^7.9.6",
+    "@types/babel__core": "^7.1.7",
     "@types/deep-freeze": "^0.1.2",
     "@types/koa-compose": "^3.2.5",
-    "@types/node": "^12.12.32",
+    "@types/node": "^12.12.42",
     "endent": "^1.4.1",
     "globby": "^11.0.0",
     "koa-compose": "^4.1.0",
-    "make-dir": "^3.0.2",
+    "make-dir": "^3.1.0",
     "p-defer": "^3.0.0",
-    "p-settle": "^4.0.1",
-    "terser": "^4.6.7"
+    "p-settle": "^4.1.0",
+    "terser": "^4.7.0"
   },
   "devDependencies": {
     "@istanbuljs/nyc-config-typescript": "^1.0.1",
     "@types/glob": "^7.1.1",
     "@types/jasmine": "^3.5.10",
-    "@types/node-fetch": "^2.5.5",
-    "@types/webpack": "^4.41.9",
+    "@types/node-fetch": "^2.5.7",
+    "@types/webpack": "^4.41.13",
     "delay": "^4.3.0",
     "express": "^4.17.1",
     "jasmine": "^3.5.0",
     "jasmine-ts": "^0.3.0",
     "micro": "^9.3.4",
     "node-fetch": "^2.6.0",
-    "nyc": "^15.0.0",
+    "nyc": "^15.0.1",
     "sane": "^4.1.0",
-    "ts-node": "^8.0.0",
-    "typescript": "^3.8.3"
+    "ts-node": "^8.10.1",
+    "typescript": "^3.9.3"
   },
   "engines": {
     "node": ">=12"
