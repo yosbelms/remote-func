@@ -86,10 +86,10 @@ export class Client {
       this.flush()
     }
 
-    return deferredPromise.promise.then((result) => {
+    return deferredPromise.promise.then((result: any) => {
       this.requestPromiseDedupeMap.delete(deduplicateKey)
       return result
-    }, (reason) => {
+    }, (reason: any) => {
       this.requestPromiseDedupeMap.delete(deduplicateKey)
       throw reason
     })

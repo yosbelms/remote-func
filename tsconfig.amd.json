@@ -1,0 +1,14 @@
+{
+  "extends": "./tsconfig",
+  "compilerOptions": {
+    "target": "ES5",
+    "module": "AMD",
+    "outFile": "./amd.js"
+  },
+  "exclude": [
+    "spec",
+  ],
+  "include": [
+    "client/**/*.ts"
+  ]
+}
