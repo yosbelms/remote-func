@@ -1,6 +1,6 @@
 {
   "name": "remote-func",
-  "version": "0.4.17",
+  "version": "0.4.18",
   "description": "JavaScript as the query language for your API",
   "main": "client/index.js",
   "repository": "https://github.com/yosbelms/remote-func",
@@ -21,7 +21,7 @@
     "build": "tsc -p ./tsconfig.nodejs.json && tsc -p ./tsconfig.browser.json",
     "build-umd": "browserify ./client/index.js -o ./umd.js -s RemoteFunc",
     "watch": "npm run clean && npx sane 'npm run build' --glob='*.ts'",
-    "prepublishOnly": "npm run clean && npm run build && npm run test"
+    "prepublishOnly": "npm run clean && npm run build && npm run build-umd && npm run test"
   },
   "author": "yosbelms",
   "license": "ISC",
