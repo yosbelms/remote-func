@@ -1,30 +1,30 @@
 import 'jasmine'
-import { createSefunc } from '../sefunc'
+import { createCfunc } from '../cfunc'
 import { TimeoutError, MemoryLimitError } from '../server/error'
 
-describe('Sefunc', () => {
+describe('Cfunc', () => {
 
   describe('should throw', () => {
 
     it('if it is not an async function', async () => {
-      const create = () => createSefunc({
+      const create = () => createCfunc({
         source: `const x = 1`
       })
       expect(create).toThrow()
     })
 
     it('on timeout', async () => {
-      const sefunc = createSefunc({
+      const cfunc = createCfunc({
         timeout: 10,
         source: `async() => {
           while(true){}
         }`
       })
-      expectAsync(sefunc()).toBeRejectedWith(TimeoutError)
+      expectAsync(cfunc()).toBeRejectedWith(TimeoutError)
     })
 
     it('on memory limit exceed', async () => {
-      const sefunc = createSefunc({
+      const cfunc = createCfunc({
         memoryLimit: 100,
         source: `async() => {
           const arr = []
@@ -33,14 +33,14 @@ describe('Sefunc', () => {
       })
 
       try {
-        await sefunc()
+        await cfunc()
       } catch (e) {
         expect(e.constructor).toBe(MemoryLimitError)
       }
     })
 
     it('on access to undeclared global', async () => {
-      const create = () => createSefunc({
+      const create = () => createCfunc({
         globalNames: [],
         source: `async() => UndeclaredGlobal`
       })
@@ -49,12 +49,12 @@ describe('Sefunc', () => {
     })
 
     it('on reassign global', async () => {
-      const sefunc = createSefunc({
+      const cfunc = createCfunc({
         globalNames: ['Object'],
         source: `async() => Object = null`
       })
 
-      expectAsync(sefunc(void 0, { Object })).toBeRejected()
+      expectAsync(cfunc(void 0, { Object })).toBeRejected()
     })
 
   })
@@ -62,7 +62,7 @@ describe('Sefunc', () => {
   // bug
   it('should not properly call a function (non member expression) when its arguments are member expressions', async () => {
     const len = 1
-    const sefunc = createSefunc({
+    const cfunc = createCfunc({
       globalNames: ['Array'],
       source: `async(len) => {
         const obj = { len: len }
@@ -70,7 +70,7 @@ describe('Sefunc', () => {
       }`
     })
 
-    const result = await sefunc([len], { Array })
+    const result = await cfunc([len], { Array })
     expect(result.length).toEqual(len)
   })
 

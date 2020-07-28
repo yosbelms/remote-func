@@ -45,7 +45,7 @@ npm i remote-func
 
 ## Services
 
-A Remote-func service is a collection of endpoints there is where the server logic lives. 
+A Remote-func service is a collection of endpoints, there is where the server logic lives. 
 
 ```ts
 import { createService  } from '../server'
@@ -129,17 +129,13 @@ The Remote-func plugin must be the first plugin in your Babel config plugins lis
 
 TypeScript needs to know about your services types in order to compile. Remote-func ships a tool to extract type definitions from service source code and generate `.js` stub files to allow TypeScript validate client code.
 
-Start by creating a `.js` or a `.ts`(if you are using `ts-node`) anywhere in your project with the following content:
+You can achieve it by executing the following command:
 
 ```ts
-import { extractDts } from 'remote-func/dev-tools/extract-dts'
-extractDts(
-  'path/to/blog-api.ts',
-  'path/to/client/destination/dir/'
-)
+npx remote-func --extract-dts --source='path/to/services.ts' --out='dts/for/client'
 ```
 
-After run it using `node` CLI, you should have type descriptors(`.d.ts`) files corresponding to your API module in the specified directory. At this point you can import the services module from the client.
+After run it you should have type descriptors(`.d.ts`) files corresponding to your API module in the specified directory. At this point you can import the services module from the client source code.
 
 ## Query
 

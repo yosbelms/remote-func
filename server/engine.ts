@@ -3,7 +3,7 @@ import { mins } from './util'
 import { EvalError } from './error'
 import { instantiateServices, Services, ServiceContext } from './service'
 import { Cache } from './cache'
-import { createSefunc, Sefunc } from '../sefunc'
+import { createCfunc, Cfunc } from '../cfunc'
 
 export interface EngineConfig {
   services: Services
@@ -14,7 +14,7 @@ export interface EngineConfig {
 
 export class Engine {
   private config: Partial<EngineConfig>
-  private sefuncCache: Cache<Sefunc>
+  private cfuncCache: Cache<Cfunc>
   private composedMiddleware: ComposedMiddleware<ServiceContext>
   private services: Services
   private servicesKeys: string[]
@@ -27,7 +27,7 @@ export class Engine {
     }
 
     this.composedMiddleware = koaCompose(this.config.middlewares || [])
-    this.sefuncCache = new Cache()
+    this.cfuncCache = new Cache()
 
     this.services = config.services || {}
     this.servicesKeys = Object.keys(this.services)
@@ -56,15 +56,15 @@ export class Engine {
   }
 
   private execute(source: string, args?: any[], context?: any) {
-    let sefunc = this.sefuncCache.get(source)
-    if (!sefunc) {
+    let cfunc = this.cfuncCache.get(source)
+    if (!cfunc) {
       try {
-        sefunc = createSefunc({
+        cfunc = createCfunc({
           globalNames: this.servicesKeys,
           timeout: this.config.timeout,
           source,
         })
-        this.sefuncCache.set(source, sefunc)
+        this.cfuncCache.set(source, cfunc)
       } catch (err) {
         throw new EvalError(String(err.stack))
       }
@@ -72,7 +72,7 @@ export class Engine {
 
     const contextifiedServices = instantiateServices(this.services, context)
     const globals = { ...contextifiedServices }
-    return sefunc(args, globals)
+    return cfunc(args, globals)
   }
 
   getEndpointPaths(): string[] {

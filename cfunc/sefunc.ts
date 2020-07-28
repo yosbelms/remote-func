@@ -17,7 +17,7 @@ const reserverGlobalIdentifiers = [
   '__globals'
 ]
 
-interface SefuncConfig {
+interface CfuncConfig {
   globalNames: string[]
   timeout: number
   memoryLimit: number
@@ -25,7 +25,7 @@ interface SefuncConfig {
   filename: string
 }
 
-export interface Sefunc {
+export interface Cfunc {
   (args?: any[], globals?: { [k: string]: any }): any
   source: string
 }
@@ -70,12 +70,12 @@ const readOnlyNatives = {
 
 const readOnlyNativesNames = Object.keys(readOnlyNatives)
 
-export const createSefunc = (config: Partial<SefuncConfig> = {}): Sefunc => {
+export const createCfunc = (config: Partial<CfuncConfig> = {}): Cfunc => {
   const {
     timeout = defaultTimeout,
     memoryLimit = defaultMemoryLimit,
     source = '',
-    filename = 'sefunc:file',
+    filename = 'cfunc:file',
   } = config
 
   let { globalNames = [] } = config
@@ -124,7 +124,7 @@ export const createSefunc = (config: Partial<SefuncConfig> = {}): Sefunc => {
   })
 
   const fn = vmCtx.exports.default
-  const contained: Sefunc = (
+  const contained: Cfunc = (
     args?: any[],
     globals?: { [k: string]: any },
   ) => {

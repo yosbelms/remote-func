@@ -84,7 +84,7 @@ export const deepClone = <T extends any, R extends DeepClone<T>>(o: T, maxDepth:
 
   // array
   if (isArray(o)) {
-    let len = o.length
+    let len = (o as any).length
     let newO = []
     for (let i = 0; i < len; i++) {
       newO[i] = deepClone(o[i], maxDepth--)

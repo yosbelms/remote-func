@@ -4,6 +4,6 @@ This example uses `babel-node` instead of `tsc` for running, because it makes po
 
 ```
 npm i
-npm run import-dts
+npm run extract-dts
 npm start
 ```
