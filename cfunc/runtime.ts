@@ -1,4 +1,3 @@
-import pDefer, { DeferredPromise } from 'p-defer'
 import { mins, isFunction, isObject, isThenable } from '../server/util'
 import { TimeoutError, MemoryLimitError } from '../server/error'
 import { sizeOf, isProtectedProperty, formatBytes } from './util'
