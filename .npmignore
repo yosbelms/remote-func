@@ -1,5 +1,6 @@
 spec/
 benchmark/
+examples/
 node_modules/
 .nyc_output/
 shrinkwrap.yaml

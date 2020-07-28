@@ -1,12 +1,13 @@
 {
   "extends": "./tsconfig",
   "compilerOptions": {
-    "target": "ES2017",
+    "target": "ES5",
     "lib": ["ES2019.object", "DOM"],
     "module": "commonjs"
   },
   "exclude": [
     "client/**/*.ts",
+    "examples/**/*.ts",
     "spec"
   ]
 }

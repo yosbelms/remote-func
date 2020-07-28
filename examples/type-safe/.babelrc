@@ -1,0 +1,5 @@
+{
+  "plugins": [
+    "remote-func/dev-tools/babel-plugin"
+  ]
+}
