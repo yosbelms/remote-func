@@ -52,8 +52,9 @@ Remote-func is a TypeScript library focused on developer experience. There are t
 
 Examples can be found in [examples](tree/master/examples) directory.
 
-- __Simple:__ This examples is written using client AMD bundle.
-- __Type safe:__ This example show RemoteFunc end-to-end type safety capabilities when combined with TypeScript.
+- __Simple:__ Simple examples written using client AMD bundle.
+- __Type safe:__ Show RemoteFunc end-to-end type safety capabilities when combined with TypeScript.
+- __Secured Endpoint:__ Make use of context to add cookie based security to endpoints.
 
 # Installation
 

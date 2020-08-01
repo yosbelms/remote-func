@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset='utf-8'>
+  <title>Example</title>
+</head>
+<script src="https://unpkg.com/remote-func/umd"></script>
+
+<body>
+  <div>To see the result create a cookie named 'authorized' with value '1'.</div>
+  <ul id="root"></ul>
+  <div id="error" style="color: red;"></ul>
+</body>
+
+<script>
+  const { createClient, httpHandler, func, bind } = RemoteFunc
+
+  // http client setup
+  const client = createClient({
+    handler: httpHandler({
+      url: 'http://localhost:5000/services',
+    })
+  })
+
+  // query
+  const getAllTodos = bind(client, func`async () => {
+    return todo.getAll()
+  }`)
+
+  
+  getAllTodos().then(todos => {
+    const root = document.getElementById('root')
+    todos.map((todo) => {
+      const li = document.createElement('li')
+      li.innerText = todo.title
+      root.appendChild(li)
+    })
+  }, (reason) => {
+    const errorEl = document.getElementById('error')
+    errorEl.innerText = String(reason)
+  })
+
+</script>
+
+</html>
