@@ -1,7 +1,7 @@
 {
   "extends": "./tsconfig",
   "compilerOptions": {
-    "target": "ES2015",
+    "target": "ES2017",
     "lib": ["ES2019.object", "DOM"],
     "module": "commonjs"
   },

@@ -3,7 +3,19 @@
 # Remote-Func
 ### JavaScript as the query language for your API
 
-Remote-func allows use a subset of TypeScript/JavaScript as the query language of your APIs.
+Remote-func allows use a subset of JavaScript as the query language of your APIs.
+
+Example:
+
+```ts
+const getBlogEntry = bind(client, func(`async (id) => {
+  const blog = await blogService.find(id)
+  return {
+    name: blog.name,
+    content: blog.content
+  }
+}`))
+```
 
 # Key features
 
@@ -19,6 +31,7 @@ Remote-func allows use a subset of TypeScript/JavaScript as the query language o
 # Documentation
 
 - [Overview](#overview)
+- [Examples](#examples)
 - [Installation](#installation)
 - [Server](#server)
   - [Services](#services)
@@ -34,6 +47,13 @@ Remote-func allows use a subset of TypeScript/JavaScript as the query language o
 # Overview
 
 Remote-func is a TypeScript library focused on developer experience. There are two primary methods of using Remote-func. The first is for plain JavaScript, the second is for use with Babel (which supports TypeScript) allowing type safety between client and server sides.
+
+# Examples
+
+Examples can be found in [examples](tree/master/examples) directory.
+
+- __Simple:__ This examples is written using client AMD bundle.
+- __Type safe:__ This example show RemoteFunc end-to-end type safety capabilities when combined with TypeScript.
 
 # Installation
 
@@ -135,7 +155,7 @@ You can achieve it by executing the following command:
 npx remote-func --extract-dts --source='path/to/services.ts' --out='dts/for/client'
 ```
 
-After run it you should have type descriptors(`.d.ts`) files corresponding to your API module in the specified directory. At this point you can import the services module from the client source code.
+After run it you should have type descriptors(`.d.ts`) files corresponding to your API module in the specified directory. At this point you can import the services module from the client source code and write queries as if you were accessing endpoints directly from the client source code.
 
 ## Query
 
@@ -151,6 +171,17 @@ const getBlogEntry = bind(client, func(async (id) => {
 }))
 
 getBlogEntry(5).then(entry => console.log(entry))
+```
+
+> Caveat: the code of your query can no use variables defined outside of it.
+
+# Engine
+
+The RemoteFunc engine is the responsible of executing a query function.
+
+```ts
+import { createEngine } from 'remote-func/server'
+const engine = createEngine(config)
 ```
 
 MIT (c) 2019-present Yosbel Marin

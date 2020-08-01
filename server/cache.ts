@@ -1,8 +1,11 @@
 import { mins, secs } from './util'
 
 export interface CacheConfig {
-  maxDataCount: number
+  /** Max number of entries to keep in the cache */
+  maxEntriesCount: number
+  /** Max time an entry can be stored in the cache without being retrieved */
   maxIddleTime: number
+  /** Interval (in milliseconds) to run garbage collector*/
   gcIntervalTime: number
 }
 
@@ -12,6 +15,7 @@ export interface CacheEntry<T> {
   usedAt: number
 }
 
+/** Cache with garbage collector */
 export class Cache<T> {
   private map: Map<string, CacheEntry<T>>
   private config: CacheConfig
@@ -20,7 +24,7 @@ export class Cache<T> {
     this.map = new Map()
 
     this.config = {
-      maxDataCount: 10000,
+      maxEntriesCount: 10000,
       maxIddleTime: mins(10),
       gcIntervalTime: secs(10),
       ...config,
@@ -30,12 +34,13 @@ export class Cache<T> {
     setInterval(this.runGc, this.config.gcIntervalTime)
   }
 
+  /** Run garbage collector */
   private runGc = () => {
-    const { maxDataCount, maxIddleTime } = this.config
+    const { maxEntriesCount, maxIddleTime } = this.config
     const size = this.map.size
     const garbageKeys: string[] = []
     const now = Date.now()
-    const idxEndRemoval = size - maxDataCount
+    const idxEndRemoval = size - maxEntriesCount
     let count = 0
 
     this.map.forEach((entry, key) => {
@@ -54,6 +59,7 @@ export class Cache<T> {
     garbageKeys.forEach(key => this.delete(key))
   }
 
+  /** Retrieve cache entry */
   get(key: string): T | void {
     const entry = this.map.get(key)
     if (entry) {
@@ -62,6 +68,7 @@ export class Cache<T> {
     }
   }
 
+  /** Store cache entry */
   set(key: string, data: T) {
     const now = Date.now()
     return this.map.set(key, {
@@ -71,10 +78,12 @@ export class Cache<T> {
     })
   }
 
+  /** Delete cache entry */
   delete(key: string) {
     return this.map.delete(key)
   }
 
+  /** Return size of the cache */
   size() {
     return this.map.size
   }

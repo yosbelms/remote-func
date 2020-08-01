@@ -1,7 +1,8 @@
 import { RemoteFunction } from './func'
 
-export const funcUrl = <T>(url: string, rf: T): Function => {
-  const source = (rf as unknown as RemoteFunction).source
+/** Transform a RemoteFunction to a URL */
+export const funcUrl = <T extends RemoteFunction>(url: string, rf: T): Function => {
+  const source = rf.source
   const result = (...args: any[]) => {
     let urlParam = ''
     let hasQuestionChar = url.indexOf('?') !== -1

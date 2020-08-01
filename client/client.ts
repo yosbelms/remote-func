@@ -8,17 +8,22 @@ export interface RequestHandlerInterface {
 }
 
 export interface ClientConfig {
+  /** Handle requests */
   handler: (iface: RequestHandlerInterface) => void
+  /** Remove duplicated requests in batch mode */
   deduplicate: boolean
 }
 
 export interface BatchConfig {
+  /** Duration (in milliseconds) of batch request gathering before flush */
   timeout: number
+  /** Max number of request batched before flush */
   sizeLimit: number
 }
 
 const MAX_BATCH_SIZE_LIMIT = 1000
 
+/** Generic client */
 export class Client {
   private config: ClientConfig
   private isUsingBatch: boolean
@@ -54,6 +59,7 @@ export class Client {
     this.batchScheduleTimeout = schedule(this.flush.bind(this))
   }
 
+  /** Execute a client request */
   request(source: string, args: any[]): Promise<ResponseMessage> {
     const { deduplicate } = this.config
     const idx = this.batchedRequests.length
@@ -95,6 +101,7 @@ export class Client {
     })
   }
 
+  /** Flush batched requests */
   flush() {
     if (this.batchedRequests.length === 0) return
     this.unscheduleBatch()
@@ -129,6 +136,7 @@ export class Client {
     })
   }
 
+  /** Turn batch mode on or off */
   useBatch(config: Partial<BatchConfig> | boolean) {
     this.flush()
     this.isUsingBatch = !!config
@@ -141,6 +149,7 @@ export class Client {
   }
 }
 
+/** Create client instance */
 export const createClient = (config?: Partial<ClientConfig>): Client => {
   return new Client(config)
 }

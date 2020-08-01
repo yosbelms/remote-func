@@ -2,10 +2,15 @@
 const NL_DELIMITER = '\n'
 const noop = () => { }
 
+/** create a JSON stream parser */
 export const createParser = <T>(options: Partial<{
+  /** Stream chunk delimiter \n by default */
   delimiter: string,
+  /** Executed on data chunk is successfully parsed */
   onData: (data: T, src: string) => void,
+  /** Executed on data chunk fails on parse */
   onError: (error: Error, buf: string) => void,
+  /** Executed when the parser is closed */
   onClose: (buffer: string) => void,
 }>) => {
   const {
@@ -32,6 +37,7 @@ export const createParser = <T>(options: Partial<{
   }
 
   return {
+    /** Write JSON chunk to parse */
     write(partial: string) {
       throwIfClosed()
       const chunks = String(partial).split(delimiter)
@@ -45,6 +51,7 @@ export const createParser = <T>(options: Partial<{
       })
     },
 
+    /** Close parser */
     close() {
       const chunkLen = remaining.trim().length
       if (chunkLen > 0) {
@@ -55,10 +62,15 @@ export const createParser = <T>(options: Partial<{
   }
 }
 
+/** create a JSON stream stringifier */
 export const createStringifier = <T>(options: Partial<{
+  /** Stream chunk delimiter \n by default */
   delimiter: string,
+  /** Executed on data is successfully stringified */
   onData: (src: string, data: T) => void,
+  /** Executed if fails on stringify */
   onError: (error: Error, data: T) => void,
+  /** Executed when the stringifier is closed */
   onClose: () => void,
 }>) => {
   const {
@@ -74,6 +86,7 @@ export const createStringifier = <T>(options: Partial<{
   }
 
   return {
+    /** Write object to stringify */
     write(data: T) {
       throwIfClosed()
       try {
@@ -84,10 +97,9 @@ export const createStringifier = <T>(options: Partial<{
       }
     },
 
+    /** Close stringifier */
     close() {
       onClose()
     }
   }
 }
-
-

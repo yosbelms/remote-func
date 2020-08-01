@@ -2,12 +2,8 @@ import { readOnly, deepClone, DeepClone } from './util'
 
 const SERVICE = Symbol('service')
 
+/** Utility to type endpoint results */
 export type Result<T> = DeepClone<T>
-
-export type ServiceContext<Ctx extends object = {}> = ({
-  source: string
-  args: any[]
-} & Ctx)
 
 export interface Services {
   [serviceName: string]: {
@@ -49,13 +45,15 @@ const readServices = <T extends Services>(services: T): T => {
   return { ...services } as T
 }
 
-export const createService = <Ctx extends ServiceContext, ServiceDef>(
+/** Create a service */
+export const createService = <Ctx extends any, ServiceDef>(
   serviceFactory: (ctx: Ctx) => ServiceDef
 ): ServiceDef => {
   (serviceFactory as any)[SERVICE] = true
   return serviceFactory as unknown as ServiceDef
 }
 
+/** Instantiate and bind services to a provided context */
 export const instantiateServices = <Ctx, Srvcs extends Services>(
   services: Srvcs,
   ctx?: Ctx

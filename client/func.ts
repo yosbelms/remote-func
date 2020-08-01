@@ -30,6 +30,7 @@ export interface Func {
   (str: string): RemoteFunction
 }
 
+/** Create a new remote function */
 export const func: Func = (sourceInput: TemplateStringsArray | Function | string): RemoteFunction => {
   if (typeof sourceInput === 'string') {
     sourceInput = sourceInput
@@ -43,6 +44,7 @@ export const func: Func = (sourceInput: TemplateStringsArray | Function | string
   return createRemoteFunc(sourceInput)
 }
 
+/** Bind a remote function to a client */
 export const bind = <T>(client: Client, remoteFunction: T & RemoteFunction): T & BoundRemoteFunction => {
   if (!client) {
     throw new Error('Invalid client')

@@ -1,5 +1,5 @@
 import 'jasmine'
-import { createEngine, expressHandler, microHandler, Result, Engine } from '../server'
+import { createEngine, expressHandler, microHandler, Result, Engine, RequestContext } from '../server'
 import { createClient, httpHandler, func, bind, engineHandler } from '../client'
 import { createService, instantiateServices } from '../server/service'
 import fetch from 'node-fetch'
@@ -9,9 +9,9 @@ const micro = require('micro')
 
 const PORT = 7000
 
-const mutateContextMiddleware = (ctx: any, next: Function) => {
+const context = (ctx: any) => {
   ctx.newProp = 1
-  return next()
+  return ctx
 }
 
 const services = {
@@ -30,7 +30,7 @@ const servers: any = {
       const app = express()
       const engine = createEngine({
         services,
-        middlewares: [mutateContextMiddleware]
+        context,
       })
       app.use('/', expressHandler(engine))
       this.server = app.listen(PORT, done)
@@ -45,7 +45,7 @@ const servers: any = {
     beforeAll(done: any) {
       const engine = createEngine({
         services,
-        middlewares: [mutateContextMiddleware]
+        context,
       })
       this.server = micro(microHandler(engine))
       this.server.listen(PORT, done)
@@ -110,7 +110,7 @@ describe('Engine Handler', () => {
   beforeAll((done) => {
     engine = createEngine({
       services,
-      middlewares: [mutateContextMiddleware]
+      context,
     })
     done()
   })

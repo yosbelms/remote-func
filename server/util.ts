@@ -34,23 +34,6 @@ export const readOnly = <T>(target: T, traps: { [k: string]: Function } = {}): T
   return new Proxy(target, { ...readOnlyTraps, ...traps })
 }
 
-export const deepMap = (
-  obj: any,
-  mapperFunction: (value: any, container: any, path: string[]) => any,
-  path: string[] = [],
-) => {
-  const result: any = {}
-  for (const [key, value] of Object.entries(obj)) {
-    let newPath = [...path, key]
-    if (isObject(value) || Array.isArray(value)) {
-      result[key] = deepMap(value, mapperFunction, [...newPath])
-    } else {
-      result[key] = mapperFunction(value, obj, [...newPath])
-    }
-  }
-  return result
-}
-
 export type DeepClone<T> = (
   T extends Function ? never :
   T extends (number | string | boolean | symbol | null | undefined | Date) ? T :

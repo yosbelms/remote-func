@@ -1,21 +1,25 @@
-import koaCompose, { Middleware, ComposedMiddleware } from 'koa-compose'
-import { mins } from './util'
+import { mins, isFunction, noop } from './util'
 import { EvalError } from './error'
-import { instantiateServices, Services, ServiceContext } from './service'
+import { instantiateServices, Services } from './service'
 import { Cache } from './cache'
 import { createCfunc, Cfunc } from '../cfunc'
+import { RequestContext } from './http'
 
 export interface EngineConfig {
+  /** Dictionary of services */
   services: Services
+  /** Path to a file containing services */
   servicesPath: String
-  middlewares: Middleware<ServiceContext>[]
+  /** Transform query context in service context */
+  context: (reqCtx: RequestContext) => any
+  /** Max execution time for query functions */
   timeout: number
 }
 
+/** Run JavaScript query functions */
 export class Engine {
   private config: Partial<EngineConfig>
   private cfuncCache: Cache<Cfunc>
-  private composedMiddleware: ComposedMiddleware<ServiceContext>
   private services: Services
   private servicesKeys: string[]
   private servicesModule: any
@@ -26,12 +30,9 @@ export class Engine {
       ...config,
     }
 
-    this.composedMiddleware = koaCompose(this.config.middlewares || [])
     this.cfuncCache = new Cache()
-
     this.services = config.services || {}
     this.servicesKeys = Object.keys(this.services)
-
     const servicesPath = this.config.servicesPath
 
     if (typeof servicesPath === 'string' && servicesPath !== '') {
@@ -46,16 +47,20 @@ export class Engine {
     }
   }
 
+  /** Return engine configuration */
   getConfig(): Partial<EngineConfig> {
     return { ...this.config }
   }
 
-  async run(source: string, args?: any[], context?: any): Promise<any> {
+  /** Run query function */
+  async run(source: string, args?: any[], queryContext?: any): Promise<any> {
     if (this.servicesModule) await this.servicesModule
-    return this.composedMiddleware(context, () => this.execute(source, args, context))
+    const createContext: any = isFunction(this.config.context) ? this.config.context : noop
+    const ctx = await createContext(queryContext)
+    return this.execute(source, args, ctx)
   }
 
-  private execute(source: string, args?: any[], context?: any) {
+  private execute(source: string, args?: any[], serviceContext?: any) {
     let cfunc = this.cfuncCache.get(source)
     if (!cfunc) {
       try {
@@ -70,11 +75,12 @@ export class Engine {
       }
     }
 
-    const contextifiedServices = instantiateServices(this.services, context)
+    const contextifiedServices = instantiateServices(this.services, serviceContext)
     const globals = { ...contextifiedServices }
     return cfunc(args, globals)
   }
 
+  /** Return path of registered endpoints */
   getEndpointPaths(): string[] {
     const paths: string[] = []
     const services = instantiateServices(this.services)
@@ -89,6 +95,7 @@ export class Engine {
 
 }
 
+/** Create new Engine */
 export const createEngine = (config: Partial<EngineConfig> = {}): Engine => {
   return new Engine(config)
 }

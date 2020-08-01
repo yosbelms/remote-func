@@ -1,14 +1,15 @@
 import pSettle from 'p-settle'
 import { Engine, createEngine } from './engine'
 import { BaseError, ErrorType } from './error'
-import { ServiceContext } from './service'
 import { createParser, createStringifier } from '../client/json-stream'
 import { RequestMessage, ResponseMessage } from '../client/message'
 
-export type RequestContext = ServiceContext<{
+export interface RequestContext {
   request: any
   response: string
-}>
+  source: string
+  args: any[]
+}
 
 export interface HttpHandlerInterface {
   engine?: Engine
@@ -23,6 +24,7 @@ export interface HttpHandlerInterface {
   end(): void
 }
 
+/** Map errors to HTTP status */
 const getHttpStatusFromError = (err: BaseError) => {
   switch (err.errorType) {
     case ErrorType.TIMEOUT: return 408
@@ -32,13 +34,19 @@ const getHttpStatusFromError = (err: BaseError) => {
   }
 }
 
+/** Generic HTTP handler, adaptable by providing handler interface */
 export const handleHttpRequest = async (iface: HttpHandlerInterface) => {
   try {
     const { initialContext = {}, engine = createEngine() } = iface
+    // Supports-Web-Streams is a custom header to let the server know if it can
+    // stream back the response
     const supportsWebStreams = Number(iface.getHeader('Supports-Web-Streams'))
+    // status code 207 (Multi-Status) because the HTTP response is a batch that can contain
+    // successful of failed responses packages
     iface.setStatusCode(207)
     iface.setHeader('Content-Type', 'text/plain;charset=utf-8')
-    if (supportsWebStreams) {
+    if (supportsWebStreams === 1) {
+      // prepare the response to be streamed
       iface.setHeader('Transfer-Encoding', 'chunked')
     }
 
@@ -57,7 +65,9 @@ export const handleHttpRequest = async (iface: HttpHandlerInterface) => {
 
     const resultPromises: Promise<any>[] = []
 
+    // create JSON stream strigifier and bind to the write function of the interface
     const strigifier = createStringifier<ResponseMessage>({ onData: iface.write })
+    // init JSON stream parser
     const parser = createParser<RequestMessage>({
       onData(data: RequestMessage) {
         const { index, source, args } = data
@@ -65,8 +75,8 @@ export const handleHttpRequest = async (iface: HttpHandlerInterface) => {
         const resultPromise = engine.run(source || '', args, ctx).then(result => {
           strigifier.write({ index, result })
         }).catch((err = {}) => {
-          const { stack } = err
-          strigifier.write({ index, error: stack || err })
+          console.error(err)
+          strigifier.write({ index, error: String(err) })
         })
         resultPromises.push(resultPromise)
       }
@@ -75,6 +85,7 @@ export const handleHttpRequest = async (iface: HttpHandlerInterface) => {
     parser.write(requests)
     strigifier.close()
     parser.close()
+    // wait for all engine run results
     await pSettle(resultPromises)
   } catch (err) {
     iface.setStatusCode(getHttpStatusFromError(err))

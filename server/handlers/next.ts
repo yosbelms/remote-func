@@ -2,6 +2,7 @@ import { IncomingMessage, ServerResponse } from 'http'
 import { handleHttpRequest } from '../http'
 import { Engine } from '../engine'
 
+/** Create an Express handler that works as a link between HTTP and Engine*/
 export const nextHandler = (engine: Engine) => {
   return async (request: IncomingMessage, response: ServerResponse) => {
     await handleHttpRequest({

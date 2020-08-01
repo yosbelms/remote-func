@@ -59,6 +59,7 @@ export interface HttpHandlerConfig {
   fetch: Fetch
 }
 
+/** Create an client HTTP handler that works as a link between Client and HTTP */
 export const httpHandler = (_config: Partial<HttpHandlerConfig> = {}) => {
   let url = 'http://localhost/'
   let globalFetch
@@ -101,7 +102,7 @@ export const httpHandler = (_config: Partial<HttpHandlerConfig> = {}) => {
     }).catch((err) => {
       // TODO: handle network error
       end(err)
-      console.log(err)
+      console.error(err)
     })
   }
 }

@@ -2,6 +2,7 @@ import { IncomingMessage, ServerResponse } from 'http'
 import { handleHttpRequest } from '../http'
 import { Engine } from '../engine'
 
+/** Create a Micro handler that works as a link between HTTP and Engine */
 export const microHandler = (engine: Engine) => {
   const { text } = require('micro')
 

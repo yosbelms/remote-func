@@ -1,8 +1,8 @@
 import 'jasmine'
-import { createService, instantiateServices, ServiceContext } from '../server/service'
+import { createService, instantiateServices } from '../server/service'
 import * as fixtureApiModule from './fixtures/servicesModule'
 
-interface Context extends ServiceContext {
+type Context = {
   user: { username: string }
 }
 

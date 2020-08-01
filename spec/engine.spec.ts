@@ -75,21 +75,17 @@ describe('engine', () => {
     })
   })
 
-  it('should work with middlewares', (done) => {
-    const middlewares = []
+  it('should work with execute `createContext`', (done) => {
     const context: { newCtxProp?: number } = {
       newCtxProp: 0
     }
 
-    middlewares.push(async (ctx: any, next: Function) => {
-      ctx.newCtxProp = 0 // init
-      const result = await next()
-      ctx.newCtxProp = 0 // reset
-      return result
-    })
-
     engine = createEngine({
-      middlewares,
+      context: async (ctx: any) => {
+        // mutate context
+        ctx.newCtxProp = 0
+        return ctx
+      },
       services: {
         s1: createService((ctx: any) => ({
           endpoint: (x: number) => {
@@ -106,7 +102,7 @@ describe('engine', () => {
       return await s1.endpoint(1)
     }`, [], context).then(r => {
       expect(r).toBe(11)
-      expect(context.newCtxProp).toBe(0)
+      expect(context.newCtxProp).toBe(11)
       done()
     })
   })

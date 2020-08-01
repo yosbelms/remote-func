@@ -1,3 +1,4 @@
+/* RemoteFunc message protocol interface */
 
 export interface RequestMessage {
   index: number

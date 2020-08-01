@@ -1,6 +1,7 @@
 import { handleHttpRequest } from '../http'
 import { Engine } from '../engine'
 
+/** Create an Express middleware that works as a link between HTTP and Engine*/
 export const expressHandler = (engine: Engine) => {
   const express = require('express')
   const text = express.text()

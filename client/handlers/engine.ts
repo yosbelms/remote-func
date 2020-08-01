@@ -4,6 +4,7 @@ interface Engine {
   run(source: string, args: any[], ctx: any): Promise<any>
 }
 
+/** Create an Client handler that works as a direct link between Client and Engine*/
 export const engineHandler = (engine: Engine) => {
   return (iface: RequestHandlerInterface): void => {
     const { getRequests, write, end } = iface
