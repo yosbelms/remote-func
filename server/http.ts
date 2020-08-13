@@ -75,7 +75,6 @@ export const handleHttpRequest = async (iface: HttpHandlerInterface) => {
         const resultPromise = engine.run(source || '', args, ctx).then(result => {
           strigifier.write({ index, result })
         }).catch((err = {}) => {
-          console.error(err)
           strigifier.write({ index, error: String(err) })
         })
         resultPromises.push(resultPromise)

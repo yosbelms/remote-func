@@ -13,7 +13,9 @@ export interface EngineConfig {
   /** Transform query context in service context */
   context: (reqCtx: RequestContext) => any
   /** Max execution time for query functions */
-  timeout: number
+  timeout: number,
+  /** Whether display query errors or not */
+  displayErrors: boolean
 }
 
 /** Run JavaScript query functions */
@@ -27,6 +29,7 @@ export class Engine {
   constructor(config: Partial<EngineConfig>) {
     this.config = {
       timeout: mins(1),
+      displayErrors: true,
       ...config,
     }
 
@@ -61,6 +64,7 @@ export class Engine {
   }
 
   private execute(source: string, args?: any[], serviceContext?: any) {
+    const onError = this.config.displayErrors ? console.error.bind(console) : noop
     let cfunc = this.cfuncCache.get(source)
     if (!cfunc) {
       try {
@@ -71,13 +75,18 @@ export class Engine {
         })
         this.cfuncCache.set(source, cfunc)
       } catch (err) {
-        throw new EvalError(String(err.stack))
+        const error = new EvalError(`in query query: ${source} \n ${String(err)}`)
+        onError(error)
+        throw error
       }
     }
 
     const contextifiedServices = instantiateServices(this.services, serviceContext)
     const globals = { ...contextifiedServices }
-    return cfunc(args, globals)
+    return cfunc(args, globals).catch((err: Error) => {
+      onError(new Error(`in query query: ${source} \n ${String(err.stack)}`))
+      throw err
+    })
   }
 
   /** Return path of registered endpoints */
