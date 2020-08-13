@@ -31,7 +31,7 @@ export const readOnlyTraps = {
 }
 
 export const readOnly = <T>(target: T, traps: { [k: string]: Function } = {}): T => {
-  return new Proxy(target, { ...readOnlyTraps, ...traps })
+  return isPrimitive(target) ? target : new Proxy(target, { ...readOnlyTraps, ...traps })
 }
 
 export type DeepClone<T> = (
