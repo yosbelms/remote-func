@@ -7,3 +7,5 @@ npm i
 npm run extract-dts
 npm start
 ```
+
+You should see two list a books grouped by publisher
