@@ -1,5 +1,5 @@
 import 'jasmine'
-import { createEngine, expressHandler, microHandler, Result, Engine, RequestContext } from '../server'
+import { createEngine, expressHandler, microHandler, Result, Engine } from '../server'
 import { createClient, httpHandler, func, bind, engineHandler } from '../client'
 import { createService, instantiateServices } from '../server/service'
 import fetch from 'node-fetch'

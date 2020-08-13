@@ -24,7 +24,7 @@ describe('engine', () => {
 
   it('should throw EvalError if source is not a function', (done) => {
     const value = 1
-    engine = createEngine()
+    engine = createEngine({ displayErrors: false })
     engine.run('const a', [value]).catch(err => {
       expect(err instanceof EvalError).toBeTruthy()
       done()
@@ -33,7 +33,7 @@ describe('engine', () => {
 
   it('should throw EvalError if there is an error while evaluating', (done) => {
     const value = 1
-    engine = createEngine()
+    engine = createEngine({ displayErrors: false })
     engine.run('async () => #', [value]).catch(err => {
       expect(err instanceof EvalError).toBeTruthy()
       done()
@@ -41,7 +41,7 @@ describe('engine', () => {
   })
 
   it('should throw TimeoutError if there is an error while executing', (done) => {
-    engine = createEngine({ timeout: secs(1) })
+    engine = createEngine({ timeout: secs(1), displayErrors: false })
     engine.run('async () => {while (true) {}}').catch(err => {
       expect(err instanceof TimeoutError).toBeTruthy()
       done()
