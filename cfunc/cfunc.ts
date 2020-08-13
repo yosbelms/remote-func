@@ -3,8 +3,8 @@ import { Script } from 'vm'
 import { extractTypes } from './types-extractor'
 import { createRuntime } from './runtime'
 import { compile } from './compiler'
-import { isValidIdentifier } from './util'
-import { readOnly, getConsole, readOnlyTraps } from '../server/util'
+import { isValidIdentifier,  createGetTrap } from './util'
+import { readOnly, getConsole } from '../server/util'
 const endent = require('endent')
 
 const defaultTimeout = 1 * 1000 * 60 // 1min
@@ -30,42 +30,73 @@ export interface Cfunc {
   source: string
 }
 
-const publicObjectStaticPropsMap = new Map([
-  ['keys', true],
-  ['values', true],
-  ['hasOwnProperty', true],
-  ['fromEntries', true],
-  ['assign', true],
-  ['create', true],
-])
-
-const objectTraps = {
-  get(target: any, prop: any, receiver: any) {
-    return (publicObjectStaticPropsMap.has(prop)
-      ? readOnlyTraps.get(target, prop, receiver)
-      : void 0
-    )
-  }
-}
-
 const readOnlyNatives = {
-  console: readOnly(getConsole()),
+  console: readOnly(getConsole(), createGetTrap([
+    'log',
+    'error',
+    'warn',
+  ])),
 
-  Object: readOnly(Object, objectTraps),
-  Promise: readOnly(Promise),
-  Date: readOnly(Date),
-  Array: readOnly(Array),
-  Number: readOnly(Number),
-  String: readOnly(String),
+  Object: readOnly(Object, createGetTrap([
+    'keys',
+    'values',
+    'hasOwnProperty',
+    'fromEntries',
+    'assign',
+    'create',
+  ])),
+
+  Promise: readOnly(Promise, createGetTrap([
+    'all',
+    'race',
+    'resolve',
+    'reject',
+    'allSettled',
+  ])),
+
+  Date: readOnly(Date, createGetTrap([
+    'now',
+    'parse',
+    'UTC',
+  ])),
+
+  Array: readOnly(Array, createGetTrap([
+    'isArray',
+    'from',
+    'of',
+  ])),
+
+  Number: readOnly(Number, createGetTrap([
+    'isFinite',
+    'isInteger',
+    'isNaN',
+    'isSafeInteger',
+    'parseFloat',
+    'parseInt',
+    'MAX_VALUE',
+    'MIN_VALUE',
+    'NaN',
+    'NEGATIVE_INFINITY',
+    'POSITIVE_INFINITY',
+    'MAX_SAFE_INTEGER',
+    'MIN_SAFE_INTEGER',
+    'EPSILON',
+  ])),
+
+  String: readOnly(String, createGetTrap([
+    'fromCharCode',
+    'fromCodePoint',
+    'raw',
+  ])),
 
   // errors
-  Error: readOnly(Error),
-  EvalError: readOnly(EvalError),
-  RangeError: readOnly(RangeError),
-  ReferenceError: readOnly(ReferenceError),
-  SyntaxError: readOnly(SyntaxError),
-  TypeError: readOnly(TypeError),
-  URIError: readOnly(URIError),
+  Error: readOnly(Error, createGetTrap([])),
+  EvalError: readOnly(EvalError, createGetTrap([])),
+  RangeError: readOnly(RangeError, createGetTrap([])),
+  ReferenceError: readOnly(ReferenceError, createGetTrap([])),
+  SyntaxError: readOnly(SyntaxError, createGetTrap([])),
+  TypeError: readOnly(TypeError, createGetTrap([])),
+  URIError: readOnly(URIError, createGetTrap([])),
 }
 
 const readOnlyNativesNames = Object.keys(readOnlyNatives)
@@ -116,13 +147,14 @@ export const createCfunc = (config: Partial<CfuncConfig> = {}): Cfunc => {
     },
     exports: Object.create(null),
   }
-
+  // evaluate js code
   script.runInNewContext(vmCtx, {
     displayErrors: true,
     timeout: timeout,
     breakOnSigint: true,
   })
 
+  // get the exported function, and create the wrapper
   const fn = vmCtx.exports.default
   const contained: Cfunc = (
     args?: any[],

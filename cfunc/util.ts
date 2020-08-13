@@ -1,3 +1,5 @@
+import { readOnlyTraps } from '../server/util'
+
 // https://www.mattzeunert.com/2016/07/24/javascript-array-object-sizes.html
 // Though, those sizes represents the worst case
 
@@ -60,3 +62,15 @@ export const formatBytes = (bytes: number, decimals = 2) => {
 
 const identRegex = /^[$A-Z_][0-9A-Z_$]*$/i
 export const isValidIdentifier = (name: string) => identRegex.test(name)
+
+export const createGetTrap = (allowedProperties: string[]) => {
+  const map = new Map(allowedProperties.map(prop => [prop, true]))
+  return {
+    get(target: any, prop: any, receiver: any) {
+      return (map.has(prop)
+        ? readOnlyTraps.get(target, prop, receiver)
+        : void 0
+      )
+    }
+  }
+}
