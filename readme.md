@@ -56,7 +56,7 @@ Examples can be found in [examples](tree/master/examples) directory.
 
 - __Simple:__ Simple examples written using client AMD bundle.
 - __Type safe:__ Show RemoteFunc end-to-end type safety capabilities when combined with TypeScript.
-- __Secured Endpoint:__ Make use of context to add cookie based security to endpoints.
+- __Secured Endpoint:__ Make use of context to add cookie based endpoint security.
 
 # Installation
 
@@ -73,7 +73,9 @@ A Remote-func service is a collection of endpoints, there is where the server lo
 ```ts
 import { createService  } from '../server'
 
+// service definition
 export const blogService = createService(ctx => ({
+  // endpoint definition
   async find(id: number) {
     // ...
   }
@@ -90,15 +92,15 @@ const PORT = 5000
 const app = express()
 
 app.use('/', expressHandler({
+  // engine creation
   engine: createEngine({
+    // path to the services module
     servicesPath: './services'
   })
 }))
 
-app.listen(
-  PORT,
-  () => console.log(`Remote func running on port ${PORT}`)
-)
+// start express
+app.listen(PORT, () => console.log(`Remote func running on port ${PORT}`))
 ```
 
 # Client
@@ -109,6 +111,7 @@ app.listen(
 import { createClient, httpHandler } from '../client'
 
 const client = createClient({
+  // http handler creation
   handler: httpHandler({
     url: 'http://localhost:5000/',
   })
@@ -117,11 +120,15 @@ const client = createClient({
 
 ## Query
 
-Queries in Remote-func are JS code that will be executed by the Remote-func engine. Often composed by a block of requests and a block of data reductions. Remote functions needs to be bound to a Remote-func client.
+Queries in Remote-func are just JS code that will be executed by the Remote-func engine. Often composed by a block of requests, and a block of data reductions. Remote functions needs to be bound to a Remote-func client. See: [Query function](/docs/query-function.md)
 
 ```ts
+// create a query function
 const getBlogEntry = bind(client, func(`async (id) => {
+  // request
   const blog = await blogService.find(id)
+
+  // reduction
   return {
     name: blog.name,
     content: blog.content
@@ -133,7 +140,7 @@ getBlogEntry(5).then(entry => console.log(entry))
 
 ## Babel plugin
 
-Remote-func bundles a Babel plugin to allow to write queries taking advantage IDEs intellisense and type checking.
+Remote-func bundles a Babel plugin to allow to take advantage IDEs intellisense and type checking.
 
 ## Configuring
 
@@ -178,13 +185,34 @@ getBlogEntry(5).then(entry => console.log(entry))
 
 > __Important:__ the code of your query can only used variables imported from endpoints types and those defined inside of the query.
 
-# Engine
 
-The RemoteFunc engine is the responsible of executing a query function.
+## Batching
+
+Batching allows to obtain the result of many function call in one HTTP call. The server will stream back the results as they are resolved. If the browser supports WebStreams, the HTTP client will resolve each function as soon as each result arrives. If the browser doesn't support WebStream all the functions will resolve when all responses arrived.
 
 ```ts
-import { createEngine } from 'remote-func/server'
-const engine = createEngine(config)
+// begin batch
+client.useBatch(true)
+
+// enqueue queries
+query1()
+query2()
+
+// execute queries
+client.flush()
+```
+
+`query1`, and `query2` will be executed in one batch request.
+
+__Auto Flus__
+
+In the following case there is no need to explicitly call `flush` since the client will flush automatically if 5 milliseconds elapsed or after 10 queued requests.
+
+```ts
+client.useBatch({
+  timeout: 5,
+  sizeLimit: 10,
+})
 ```
 
 MIT (c) 2019-present Yosbel Marin
