@@ -219,8 +219,12 @@ group('Remote Func concurrency', () => {
   action('FastIncreasingHeap w/ new operator', async () => fetch(rf4()))
 })
 
+// mute console errors
+console.error = () => {}
+
 run({
   duration: 60,
   concurrency: 20,
   showResults: true
 })
+
