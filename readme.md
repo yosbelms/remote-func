@@ -15,6 +15,8 @@ const getBlogEntry = bind(client, func(`async (id) => {
     content: blog.content
   }
 }`))
+
+getBlogEntry().then(...)
 ```
 
 # Key features
@@ -161,7 +163,7 @@ After run it you should have type descriptors(`.d.ts`) files corresponding to yo
 ## Query
 
 ```ts
-import { blogService } from 'path/to/blog-api.ts'
+import { blogService } from 'path/to/blog-api'
 
 const getBlogEntry = bind(client, func(async (id) => {
   const blog = await blogService.find(id)
@@ -174,7 +176,7 @@ const getBlogEntry = bind(client, func(async (id) => {
 getBlogEntry(5).then(entry => console.log(entry))
 ```
 
-> Caveat: the code of your query can no use variables defined outside of it.
+> __Important:__ the code of your query can only used variables imported from endpoints types and those defined inside of the query.
 
 # Engine
 
