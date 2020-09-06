@@ -60,3 +60,17 @@ export const bind = <T>(client: Client, remoteFunction: T & RemoteFunction): T &
   boundRemoteFunction.remoteFunction = remoteFunction
   return boundRemoteFunction as unknown as (T & BoundRemoteFunction)
 }
+
+/** Bind a service to a client in such way that the service can be used outside of a query function */
+export const externalBind = (client: Client, serviceName: string) => {
+  const binds: any = {}
+  const proxy = new Proxy({}, {
+    get(target: any, prop: any, receiver: any): any {
+      if (!binds.hasOwnProperty(prop)) {
+        binds[prop] = bind(client, func(`async (...args) => ${serviceName}.${prop}(...args)`))
+      }
+      return binds[prop]
+    }
+  })
+  return proxy
+}
