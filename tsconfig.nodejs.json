@@ -8,6 +8,7 @@
   "exclude": [
     "client/**/*.ts",
     "examples/**/*.ts",
-    "spec"
+    "spec",
+    "benchmark"
   ]
 }

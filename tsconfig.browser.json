@@ -5,6 +5,7 @@
     "module": "commonjs",
   },
   "exclude": [
+    "benchmark",
     "spec",
     "examples/**/*.ts"
   ],
