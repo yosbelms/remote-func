@@ -123,6 +123,8 @@ const client = createClient({
 Queries in Remote-func are just JS code that will be executed by the Remote-func engine. Often composed by a block of requests, and a block of data reductions. Remote functions needs to be bound to a Remote-func client. See: [Query function](/docs/query-function.md)
 
 ```ts
+import { bind, func } from '../client'
+
 // create a query function
 const getBlogEntry = bind(client, func(`async (id) => {
   // request
@@ -137,6 +139,19 @@ const getBlogEntry = bind(client, func(`async (id) => {
 
 getBlogEntry(5).then(entry => console.log(entry))
 ```
+
+## RPC
+
+Remote-func allow to use services as simple RPC system. This way doesn't evaluete JS code in the server side, but. By using this mode it is not possible to take advantage of the query mode capabilities to avoid over-fetching, and under-fetching.
+
+```ts
+import { bind } from '../client'
+
+// create a query function
+const blogService = bind(client, 'blogService')
+blogService.find(5).then(entry => console.log(entry))
+```
+
 
 ## Babel plugin
 
