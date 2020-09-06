@@ -94,7 +94,7 @@ describe('End to End:', () => {
           })
         })
 
-        const xService: typeof services.service = externalBind(client, 'service')
+        const xService = externalBind<typeof services.service>(client, 'service')
 
         expect(await xService.one()).toBe(1)
       })
