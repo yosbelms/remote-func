@@ -4,6 +4,7 @@ import { instantiateServices, Services } from './service'
 import { Cache } from './cache'
 import { createCfunc, Cfunc } from '../cfunc'
 import { RequestContext } from './http'
+import { parseRpcCommand, isRpcCommand } from './rpc'
 
 export interface EngineConfig {
   /** Dictionary of services */
@@ -65,6 +66,11 @@ export class Engine {
 
   private execute(source: string, args?: any[], serviceContext?: any) {
     const onError = this.config.displayErrors ? console.error.bind(console) : noop
+
+    if (isRpcCommand(source)) {
+      return this.handleRpc(parseRpcCommand(source), args, serviceContext, onError)
+    }
+
     let cfunc = this.cfuncCache.get(source)
     if (!cfunc) {
       try {
@@ -75,7 +81,7 @@ export class Engine {
         })
         this.cfuncCache.set(source, cfunc)
       } catch (err) {
-        const error = new EvalError(`in query query: ${source} \n ${String(err)}`)
+        const error = new EvalError(`in query: ${source} \n ${String(err)}`)
         onError(error)
         throw error
       }
@@ -87,6 +93,19 @@ export class Engine {
       onError(new Error(`in query query: ${source} \n ${String(err.stack)}`))
       throw err
     })
+  }
+
+
+  private handleRpc(rpcCommand: { service: string, method: string }, args?: any[], serviceContext?: any, onError?: any) {
+    // handle rpc
+    const { service, method } = rpcCommand
+    if (this.servicesKeys.indexOf(service) === -1) {
+      const error = new EvalError(`invalid service name: ${service}}`)
+      onError(error)
+      throw error
+    }
+    const contextifiedServices = instantiateServices(this.services, serviceContext)
+    return contextifiedServices[service][method].apply(args)
   }
 
   /** Return path of registered endpoints */

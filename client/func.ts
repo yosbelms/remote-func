@@ -1,3 +1,5 @@
+import { createRpcCommand } from "../server/rpc"
+
 interface Client {
   request(source: string, args: any[]): any
 }
@@ -30,6 +32,20 @@ export interface Func {
   (str: string): RemoteFunction
 }
 
+/** Bind a service to a client in such way that the service can be used outside of a query function through RPC */
+const bindServiceRpc = <T>(client: Client, serviceName: string): T => {
+  const binds: any = {}
+  return new Proxy({}, {
+    get(target: any, prop: any, receiver: any): any {
+      if (!binds.hasOwnProperty(prop)) {
+        // binds[prop] = bind(client, func(`async (...args) => ${serviceName}.${prop}(...args)`))
+        binds[prop] = bind(client, func(createRpcCommand(serviceName, prop)))
+      }
+      return binds[prop]
+    }
+  })
+}
+
 /** Create a new remote function */
 export const func: Func = (sourceInput: TemplateStringsArray | Function | string): RemoteFunction => {
   if (typeof sourceInput === 'string') {
@@ -45,31 +61,25 @@ export const func: Func = (sourceInput: TemplateStringsArray | Function | string
 }
 
 /** Bind a remote function to a client */
-export const bind = <T>(client: Client, remoteFunction: T & RemoteFunction): T & BoundRemoteFunction => {
+export function bind<T>(client: Client, serviceName: string): T;
+export function bind<T>(client: Client, remoteFunction: T & RemoteFunction): T & BoundRemoteFunction;
+export function bind<T>(client: any, target: any): any {
   if (!client) {
     throw new Error('Invalid client')
   }
-  if (!remoteFunction || !remoteFunction.isRemoteFunction) {
+
+  if (typeof target === 'string') {
+    return bindServiceRpc(client, target)
+  }
+
+  if (!target || !target.isRemoteFunction) {
     throw new Error('Invalid remote function')
   }
-  if (remoteFunction.bound) {
+  if (target.bound) {
     throw new Error('Remote function already bound')
   }
-  const source = remoteFunction.source as string
+  const source = target.source as string
   const boundRemoteFunction = (...args: any[]) => client.request(source, args)
-  boundRemoteFunction.remoteFunction = remoteFunction
+  boundRemoteFunction.target = target
   return boundRemoteFunction as unknown as (T & BoundRemoteFunction)
-}
-
-/** Bind a service to a client in such way that the service can be used outside of a query function */
-export const externalBind = <T>(client: Client, serviceName: string): T => {
-  const binds: any = {}
-  return new Proxy({}, {
-    get(target: any, prop: any, receiver: any): any {
-      if (!binds.hasOwnProperty(prop)) {
-        binds[prop] = bind(client, func(`async (...args) => ${serviceName}.${prop}(...args)`))
-      }
-      return binds[prop]
-    }
-  })
 }

@@ -1,6 +1,6 @@
 import 'jasmine'
 import { createEngine, expressHandler, microHandler, Result, Engine } from '../server'
-import { createClient, httpHandler, func, bind, engineHandler, externalBind } from '../client'
+import { createClient, httpHandler, func, bind, engineHandler } from '../client'
 import { createService, instantiateServices } from '../server/service'
 import fetch from 'node-fetch'
 
@@ -86,7 +86,7 @@ describe('End to End:', () => {
         expect(await rFunc()).toBe(1)
       })
 
-      it('should execute functions in the server using externalBind', async () => {
+      it('should execute functions in the server by binding a service as rpc', async () => {
         const client = createClient({
           handler: httpHandler({
             url: `http://localhost:${PORT}/`,
@@ -94,7 +94,7 @@ describe('End to End:', () => {
           })
         })
 
-        const xService = externalBind<typeof services.service>(client, 'service')
+        const xService = bind<typeof services.service>(client, 'service')
 
         expect(await xService.one()).toBe(1)
       })
