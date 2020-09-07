@@ -32,6 +32,7 @@
     "@types/deep-freeze": "^0.1.2",
     "@types/koa-compose": "^3.2.5",
     "@types/node": "^12.12.42",
+    "@types/rimraf": "^3.0.0",
     "endent": "^1.4.1",
     "globby": "^11.0.0",
     "koa-compose": "^4.1.0",
@@ -39,6 +40,7 @@
     "mri": "^1.1.6",
     "p-defer": "^3.0.0",
     "p-settle": "^4.1.0",
+    "rimraf": "^3.0.2",
     "terser": "^4.7.0"
   },
   "devDependencies": {

@@ -2,11 +2,20 @@ import fs from 'fs'
 import path from 'path'
 import globby from 'globby'
 import makeDir from 'make-dir'
+import rimraf from 'rimraf'
 
 export const extractDts = async (apiModulePath: string, destinationDir: string) => {
   const sourcePath = path.resolve(apiModulePath)
   destinationDir = path.resolve(destinationDir)
+  
   const dtsDir = await makeDir(path.join(destinationDir, '/dts'))
+  const signatureFilePath = path.join(destinationDir, '/.extract-dts')
+
+  if (fs.existsSync(signatureFilePath)) {
+    rimraf.sync(destinationDir)
+  }
+
+  fs.writeFileSync(signatureFilePath, '')
 
   const fileMapping = compile([sourcePath], {
     target: 'ES2019',
