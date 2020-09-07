@@ -105,7 +105,7 @@ export class Engine {
       throw error
     }
     const contextifiedServices = instantiateServices(this.services, serviceContext)
-    return contextifiedServices[service][method].apply(args)
+    return contextifiedServices[service][method].apply(null, args as [any])
   }
 
   /** Return path of registered endpoints */

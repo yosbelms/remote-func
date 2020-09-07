@@ -19,6 +19,7 @@ const services = {
     mutateContext: () => ctx.newProp,
     one: (): Result<number> => 1,
     newDate: (): Result<Date> => new Date(),
+    identity: (x: any) => x,
   }))
 }
 
@@ -94,9 +95,9 @@ describe('End to End:', () => {
           })
         })
 
-        const xService = bind<typeof services.service>(client, 'service')
+        const serviceRpc = bind<typeof services.service>(client, 'service')
 
-        expect(await xService.one()).toBe(1)
+        expect(await serviceRpc.identity(5)).toBe(5)
       })
 
       it('should execute functions in the server using GET', async () => {
