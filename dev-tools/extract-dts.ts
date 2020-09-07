@@ -13,6 +13,7 @@ export const extractDts = async (apiModulePath: string, destinationDir: string) 
     lib: ['lib.es2019.full.d.ts'],
     strict: false,
     declaration: true,
+    skipLibCheck: true,
     allowJs: true,
     emitDeclarationOnly: true,
     noEmitOnError: true,
