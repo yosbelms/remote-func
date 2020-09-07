@@ -7,13 +7,13 @@ import rimraf from 'rimraf'
 export const extractDts = async (apiModulePath: string, destinationDir: string) => {
   const sourcePath = path.resolve(apiModulePath)
   destinationDir = path.resolve(destinationDir)
-  
-  const dtsDir = await makeDir(path.join(destinationDir, '/dts'))
   const signatureFilePath = path.join(destinationDir, '/.extract-dts')
 
   if (fs.existsSync(signatureFilePath)) {
     rimraf.sync(destinationDir)
   }
+  
+  const dtsDir = await makeDir(path.join(destinationDir, '/dts'))
 
   fs.writeFileSync(signatureFilePath, '')
 
