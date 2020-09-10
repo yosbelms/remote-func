@@ -170,6 +170,25 @@ The Remote-func plugin must be the first plugin in your Babel config plugins lis
 }
 ```
 
+The plugin can receive some parameters, useful to intercept its transpilation stages. Example usage:
+
+```js
+"plugins": [
+  ["remote-func/dev-tools/babel-plugin", {
+    test: /\.ts$/,
+    transpile: src => src,
+    transform: src => src,
+  }]
+]
+```
+
+Options:
+
+- **test**: file path test regex, default /\.(js|mjs|jsx|ts|tsx)$/
+- **transpile**: transpilation function, default TypeScript
+- **trasform**: receive the final code right before write, the transpiled code
+            will be replaced by the returning value.
+
 ## Type definition import
 
 TypeScript needs to know about your services types in order to compile. Remote-func ships a tool to extract type definitions from service source code and generate `.js` stub files to allow TypeScript validate client code.

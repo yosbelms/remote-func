@@ -42,8 +42,8 @@ const defaultTypescriptTranspile = (source: string) => {
 
 /**
 Options:
-  - transpile: transpilation function, default TypeScript
   - test: file path test regex, default /\.(js|mjs|jsx|ts|tsx)$/
+  - transpile: transpilation function, default TypeScript
   - trasform: receive the final code right before write, the transpiled code
               will be replaced by the returning value.
 
@@ -54,12 +54,12 @@ Example usage with Babel:
 ]
 
 "plugins": [
-    ["remote-func/dev-tools/babel-plugin", {
-      transpile: () => {},
-      test: /regex/,
-      transform: () => {},
-    }]
-  ]
+  ["remote-func/dev-tools/babel-plugin", {
+    test: /regex/,
+    transpile: () => {},
+    transform: () => {},
+  }]
+]
 
  */
 
