@@ -1,6 +1,6 @@
 {
   "name": "remote-func",
-  "version": "0.4.25",
+  "version": "0.4.26",
   "description": "JavaScript as the query language for your API",
   "main": "client/index.js",
   "repository": "https://github.com/yosbelms/remote-func",

@@ -87,6 +87,19 @@ describe('End to End:', () => {
         expect(await rFunc()).toBe(1)
       })
 
+      fit('should pass params', async () => {
+        const client = createClient({
+          handler: httpHandler({
+            url: `http://localhost:${PORT}/`,
+            fetch: fetch as any,
+          })
+        })
+        const rFunc = bind(client, func(`async (x) => service.identity(x)`))
+
+        expect(await rFunc(5)).toBe(5)
+        expect(await rFunc(6)).toBe(6)
+      })
+
       it('should execute functions in the server by binding a service as rpc', async () => {
         const client = createClient({
           handler: httpHandler({
