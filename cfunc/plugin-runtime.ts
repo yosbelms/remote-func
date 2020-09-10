@@ -12,17 +12,21 @@ const getParentFunctionNode = (t: any, path: any) => {
 }
 
 const createCheckAsyncTime = (t: any, state: any) => {
-  return t.awaitExpression(
-    t.callExpression(
-      t.memberExpression(state.runtimeInstanceIdentifier, t.identifier('checkAsync')), []
-    )
+  const callExpr = t.callExpression(
+    t.memberExpression(state.runtimeInstanceIdentifier, t.identifier('checkAsync')), []
   )
+  callExpr.isRuntimeCall = true
+  const awaitExpr = t.awaitExpression(callExpr)
+  awaitExpr.isRuntimeAwait = true
+  return awaitExpr
 }
 
 const createCheckSyncTime = (t: any, state: any) => {
-  return t.callExpression(
+  const expr = t.callExpression(
     t.memberExpression(state.runtimeInstanceIdentifier, t.identifier('checkSync')), []
   )
+  expr.isRuntimeCall = true
+  return expr
 }
 
 const handleLoop = (t: any, path: any, state: any) => {
@@ -184,6 +188,19 @@ export const createRuntimePlugin = () => {
           const controlCheck = fnNode.async ? createCheckAsyncTime(t, state) : createCheckSyncTime(t, state)
           path.node.handler.body.body.unshift(controlCheck)
           path.node.finalizer.body.unshift(controlCheck)
+        },
+
+        AwaitExpression: (path: any, state: any) => {
+          if (path.node.isRuntimeAwait) return
+          const argumentNode = path.node.argument
+          const callExpr = t.callExpression(
+            t.memberExpression(state.runtimeInstanceIdentifier, t.identifier('awaitPromise')), [
+              argumentNode
+            ]
+          )
+
+          callExpr.isRuntimeAwait = true
+          path.node.argument = callExpr
         },
 
         // program setup

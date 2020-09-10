@@ -1,6 +1,7 @@
 import 'jasmine'
 import { createCfunc } from '../cfunc'
 import { TimeoutError, MemoryLimitError } from '../server/error'
+import delay from 'delay'
 
 describe('Cfunc', () => {
 
@@ -72,6 +73,33 @@ describe('Cfunc', () => {
 
     const result = await cfunc([len], { Array })
     expect(result.length).toEqual(len)
+  })
+
+  // bug
+  // throwing timeout error after two consecutive sync time checks
+  // and the time elapsed since the previous async time check
+  // is was greater than the time budget for sync execution
+  it('should call time async check after each await expressions', async () => {
+    const len = 1
+    const service = {
+      async asyncFn() {
+        await delay(500)
+        return 1
+      }
+    }
+
+    const cfunc = createCfunc({
+      timeout: 1000,
+      globalNames: ['service'],
+      source: `async() => {
+        const result = await service.asyncFn();
+        const arrSyncCheckTrigger = [1, 2].map(x => x)
+        return result + arrSyncCheckTrigger[0]
+      }`
+    })
+
+    const result = await cfunc([], { service })
+    expect(result).toEqual(2)
   })
 
 })

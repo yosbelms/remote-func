@@ -156,6 +156,14 @@ export class Runtime {
   computedProp(prop: string) {
     return isProtectedProperty(prop) ? void 0 : prop
   }
+
+  async awaitPromise(promise: Promise<any>) {
+    const result = await promise
+    // do not await chackAsync because it is resolving a promise
+    // so, it does not overtakes
+    this.checkAsync()
+    return result
+  }
 }
 
 export const createRuntime = (config: Partial<RuntimeConfig>) => {
