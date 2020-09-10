@@ -40,6 +40,29 @@ const defaultTypescriptTranspile = (source: string) => {
   }
 }
 
+/**
+Options:
+  - transpile: transpilation function, default TypeScript
+  - test: file path test regex, default /\.(js|mjs|jsx|ts|tsx)$/
+  - trasform: receive the final code right before write, the transpiled code
+              will be replaced by the returning value.
+
+Example usage with Babel:
+
+"plugins": [
+  "remote-func/dev-tools/babel-plugin"
+]
+
+"plugins": [
+    ["remote-func/dev-tools/babel-plugin", {
+      transpile: () => {},
+      test: /regex/,
+      transform: () => {},
+    }]
+  ]
+
+ */
+
 export default ({ types: t }: { types: any }) => {
   return {
     visitor: {
@@ -61,7 +84,6 @@ export default ({ types: t }: { types: any }) => {
         const {
           transpile = defaultTypescriptTranspile,
           test = defaultTestRegex,
-          hashSource,
           transform = identity,
         } = state.opts
 
@@ -72,8 +94,7 @@ export default ({ types: t }: { types: any }) => {
 
           if (t.isFunctionExpression(firstArgPath) || t.isArrowFunctionExpression(firstArgPath)) {
             const source = firstArgPath.getSource()
-            const transpiled = transpile(source).trim()
-            let sourceOutput: string = transform(transpiled)
+            let sourceOutput: string = transpile(source).trim()
 
             if (isProduction()) {
               // because terser doesn't compiles when the input code is  async () => ...
@@ -84,6 +105,7 @@ export default ({ types: t }: { types: any }) => {
             }
 
             // transform
+            sourceOutput = transform(sourceOutput)
             firstArgPath.replaceWith(t.stringLiteral(sourceOutput))
           }
         }
