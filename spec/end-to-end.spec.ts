@@ -87,7 +87,7 @@ describe('End to End:', () => {
         expect(await rFunc()).toBe(1)
       })
 
-      fit('should pass params', async () => {
+      it('should pass params', async () => {
         const client = createClient({
           handler: httpHandler({
             url: `http://localhost:${PORT}/`,
