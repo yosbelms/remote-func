@@ -127,6 +127,27 @@ describe('End to End:', () => {
         expect(await rFunc()).toBe(instantiateServices(services).service.one())
       })
 
+
+      // bug
+      // throws an error when running parallel requests in batch mode
+      it('should use batch in parallel requests', async () => {
+        const client = createClient({
+          handler: httpHandler({
+            url: `http://localhost:${PORT}/`,
+            fetch: fetch as any,
+          }),
+        })
+        const rFunc = bind(client, func(`async (x) => service.identity(x)`))
+
+        client.useBatch({
+          timeout: 100
+        })
+        const [x1, x2] = await Promise.all([rFunc(1), rFunc(2)])
+
+        expect(x1).toBe(1)
+        expect(x2).toBe(2)
+      })
+
       afterAll(server.afterAll.bind(server))
     })
   })
