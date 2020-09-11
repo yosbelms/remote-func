@@ -107,7 +107,7 @@ export class Client {
     this.unscheduleBatch()
     const { handler } = this.config
     const requests = this.batchedRequests
-    let deferredPromises = this.batchedRequestsDeferredPromises
+    const deferredPromises = this.batchedRequestsDeferredPromises
     // reset
     this.batchedRequests = []
     this.batchedRequestsDeferredPromises = []
@@ -115,7 +115,6 @@ export class Client {
     const write = (resp: ResponseMessage) => {
       const index = resp.index
       const deferredPromise = deferredPromises[index]
-      deferredPromises = deferredPromises.slice(index, 1)
       if (resp && resp.error === void 0) {
         deferredPromise.resolve(resp.result)
       } else {

@@ -93,7 +93,7 @@ export const httpHandler = (_config: Partial<HttpHandlerConfig> = {}) => {
       onData: write,
       onClose: () => end(),
       onError: (err: any, str: string) => {
-        console.log(err + str)
+        console.log(`${str} ${err.stack}`)
       },
     })
 
@@ -102,7 +102,7 @@ export const httpHandler = (_config: Partial<HttpHandlerConfig> = {}) => {
     }).catch((err) => {
       // TODO: handle network error
       end(err)
-      console.error(err)
+      console.log(err)
     })
   }
 }
