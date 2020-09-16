@@ -2,7 +2,7 @@
   "extends": "./tsconfig",
   "compilerOptions": {
     "target": "ES2017",
-    "lib": ["ES2019.object", "DOM"],
+    "lib": ["ES2019.object", "DOM", "ESNext.Promise"],
     "module": "commonjs"
   },
   "exclude": [
