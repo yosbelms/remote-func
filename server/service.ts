@@ -5,6 +5,8 @@ const SERVICE = Symbol('service')
 /** Utility to type endpoint results */
 export type Result<T> = DeepClone<T>
 export type AsyncResult<T> = Promise<Result<T>>
+// TypeScript issue: https://github.com/microsoft/TypeScript/issues/12776
+export const AsyncResult = Promise
 
 export interface Services {
   [serviceName: string]: {
