@@ -25,7 +25,7 @@ export const extractDts = async (apiModulePath: string, destinationDir: string) 
     skipLibCheck: true,
     allowJs: true,
     emitDeclarationOnly: true,
-    noEmitOnError: true,
+    noEmitOnError: false,
     declarationDir: dtsDir,
     esModuleInterop: true,
   })
