@@ -1,3 +1,6 @@
+const readOnlySymbol = Symbol('read-only')
+
+export const isReadOnly = (obj: any) => !isPrimitive(obj) && obj[readOnlySymbol]
 export const identity = (a: any) => a
 export const noop = () => { }
 export const secs = (s: number) => s * 1000
@@ -23,6 +26,10 @@ export const readOnlyTraps = {
     return readOnly(new target(...args))
   },
   get(target: any, prop: any, receiver: any): any {
+    const val = target[prop]
+    if (isFunction(val)) {
+      return readOnly((...args: any[]) => val.apply(target, args))
+    }
     return readOnly(Reflect.get(target, prop, receiver))
   },
   set(target: any, prop: any, val: any) {
@@ -31,7 +38,12 @@ export const readOnlyTraps = {
 }
 
 export const readOnly = <T>(target: T, traps: { [k: string]: Function } = {}): T => {
-  return isPrimitive(target) ? target : new Proxy(target, { ...readOnlyTraps, ...traps })
+  if (isPrimitive(target) || isReadOnly(target)) {
+    return target
+  } else {
+    (target as any)[readOnlySymbol] = true
+    return new Proxy(target, { ...readOnlyTraps, ...traps })
+  }
 }
 
 export type DeepClone<T> = (

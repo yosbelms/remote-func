@@ -102,4 +102,16 @@ describe('Cfunc', () => {
     expect(result).toEqual(2)
   })
 
+  // bug
+  it('should allow to use Promise static methods', async () => {
+    const len = 1
+    const cfunc = createCfunc({
+      globalNames: ['Promise'],
+      source: `async (x) => await Promise.all(x)`
+    })
+    const param = [1, 2]
+    const result = await cfunc([param])
+    expect(param).toEqual(param)
+  })
+
 })

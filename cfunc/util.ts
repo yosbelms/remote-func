@@ -67,10 +67,9 @@ export const createGetTrap = (allowedProperties: string[]) => {
   const map = new Map(allowedProperties.map(prop => [prop, true]))
   return {
     get(target: any, prop: any, receiver: any) {
-      return (map.has(prop)
-        ? readOnlyTraps.get(target, prop, receiver)
-        : void 0
-      )
+      if (map.has(prop)) {
+        return readOnlyTraps.get(target, prop, receiver)
+      }
     }
   }
 }
