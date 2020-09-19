@@ -42,6 +42,17 @@ describe('services', () => {
       expect(serviceInstance.exampleService.endpoint(val)).toEqual(val)
       expect(serviceInstance.exampleService.endpoint(val)).not.toBe(val)
     })
+
+    it('the this context of endpoint should be the ', () => {
+      const exampleService = createService(() => ({
+        endpoint1: () => 1,
+        endpoint2() {
+          return this.endpoint1() + 1
+        }
+      }))
+      const serviceInstance = instantiateServices({ exampleService })
+      expect(serviceInstance.exampleService.endpoint2()).toEqual(2)
+    })
   })
 
 })

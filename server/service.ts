@@ -10,7 +10,7 @@ export const AsyncResult = Promise
 
 export interface Services {
   [serviceName: string]: {
-    [endpointName: string]: (ctx?: any) => any
+    [endpointName: string]: (...args: any[]) => any
   }
 }
 
@@ -26,7 +26,7 @@ const instantiateService = (service: Function, context?: any) => {
       if (typeof endpoint !== 'function') {
         throw new Error(`'${prop}' is not a function`)
       }
-      return (...args: any[]) => deepClone(endpoint(...args))
+      return (...args: any[]) => deepClone(endpoint.apply(serviceInstance, args))
     }
   })
 }
