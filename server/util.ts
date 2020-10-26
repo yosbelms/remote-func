@@ -21,6 +21,8 @@ export const getConsole = () => (isProduction()
   : console
 )
 
+const hasOwnProperty = Object.prototype.hasOwnProperty
+
 export const readOnlyTraps = {
   construct(target: any, args: any[]): any {
     return readOnly(new target(...args))
@@ -90,7 +92,7 @@ export const deepClone = <T extends any, R extends DeepClone<T>>(o: T, maxDepth:
   // object
   let newO: any = {}
   for (let propName in o) {
-    if ((o as Object).hasOwnProperty(propName)) {
+    if (hasOwnProperty.call(o, propName)) {
       newO[propName] = deepClone(o[propName], maxDepth--)
     }
   }
