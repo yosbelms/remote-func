@@ -41,6 +41,7 @@ getBlogEntry().then(...)
 - [Client](#client)
   - [HTTP client](#http-client)
   - [Query](#query)
+  - [Partial Queries](#partial-queries)
 - [Babel plugin](#babel-plugin)
   - [Configuring](#configuring)
   - [Type definition import](#type-definition-import)
@@ -140,6 +141,36 @@ const getBlogEntry = bind(client, func(`async (id) => {
 getBlogEntry(5).then(entry => console.log(entry))
 ```
 
+## Partial Queries
+
+Remote-func allow pass queries as parameter of another queries. This feature is useful if you want to reuse logic among different queries.
+
+```ts
+import { bind } from '../client'
+
+// create reusable query function
+// there is no need to bind here
+const mapBlogEntry = func(`async (entry) => {
+  return {
+    name: entry.name,
+    content: entry.content
+  }
+}`)
+
+// create a query function
+const getBlogEntry = bind(client, func(`async (id, mapBlogEntry) => {
+  const blog = await blogService.find(id)
+
+  // using the partial query passed by param
+  return mapBlogEntry(blog)
+}`))
+
+getBlogEntry(5, mapBlogEntry).then(entry => console.log(entry))
+```
+
+> Gotcha: partial queries does not accept partial queries as param
+
+
 ## RPC
 
 Remote-func allow to use services as simple RPC system. This way doesn't evaluete JS code in the server side, but. By using this mode it is not possible to take advantage of the query mode capabilities to avoid over-fetching, and under-fetching.
@@ -147,7 +178,7 @@ Remote-func allow to use services as simple RPC system. This way doesn't evaluet
 ```ts
 import { bind } from '../client'
 
-// create a query function
+// create a rpc client
 const blogService = bind(client, 'blogService')
 blogService.find(5).then(entry => console.log(entry))
 ```

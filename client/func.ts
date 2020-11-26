@@ -1,4 +1,5 @@
-import { createRpcCommand } from "../server/rpc"
+import { createPartialFunc } from '../server/partial-func'
+import { createRpcCommand } from '../server/rpc'
 
 interface Client {
   request(source: string, args: any[]): any
@@ -79,7 +80,15 @@ export function bind<T>(client: any, target: any): any {
     throw new Error('Remote function already bound')
   }
   const source = target.source as string
-  const boundRemoteFunction = (...args: any[]) => client.request(source, args)
+  const boundRemoteFunction = (...args: any[]) => {
+    const _args = (args || []).map((arg: RemoteFunction) => {
+      if (typeof arg === 'function' && arg.isRemoteFunction) {
+        return createPartialFunc(arg.source as string)
+      }
+      return arg
+    })
+    return client.request(source, _args)
+  }
   boundRemoteFunction.target = target
   return boundRemoteFunction as unknown as (T & BoundRemoteFunction)
 }

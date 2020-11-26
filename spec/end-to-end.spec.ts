@@ -148,6 +148,21 @@ describe('End to End:', () => {
         expect(x2).toBe(2)
       })
 
+      it('should receive and execute remote funcs as param', async () => {
+        const client = createClient({
+          handler: httpHandler({
+            url: `http://localhost:${PORT}/`,
+            fetch: fetch as any,
+          }),
+        })
+
+        const sum1 = func(`async (x) => x + 1`)
+        const rFunc = bind(client, func(`async (x, sum1) => sum1(service.identity(x))`))
+        const r = await rFunc(1, sum1)
+
+        expect(r).toBe(2)
+      })
+
       afterAll(server.afterAll.bind(server))
     })
   })

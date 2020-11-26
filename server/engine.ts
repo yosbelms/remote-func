@@ -1,10 +1,11 @@
-import { mins, isFunction, noop } from './util'
+import { mins, isFunction, noop, isString } from './util'
 import { EvalError } from './error'
 import { instantiateServices, Services } from './service'
 import { Cache } from './cache'
 import { createCfunc, Cfunc } from '../cfunc'
 import { RequestContext } from './http'
 import { parseRpcCommand, isRpcCommand } from './rpc'
+import { getPartialFuncSource, isPartialFunc } from './partial-func'
 
 export interface EngineConfig {
   /** Dictionary of services */
@@ -67,10 +68,27 @@ export class Engine {
   private execute(source: string, args?: any[], serviceContext?: any) {
     const onError = this.config.displayErrors ? console.error.bind(console) : noop
 
+    const contextifiedServices = instantiateServices(this.services, serviceContext)
+    const globals = { ...contextifiedServices }
+
     if (isRpcCommand(source)) {
-      return this.handleRpc(parseRpcCommand(source), args, serviceContext, onError)
+      return this.handleRpc(parseRpcCommand(source), args, contextifiedServices, onError)
     }
 
+    const parsedFunc = this.parseFunc(source, onError, globals)
+
+    const _args = (args || []).map(arg => {
+      if (isString(arg) && isPartialFunc(arg)) {
+        const parsedPartialFunc = this.parseFunc(getPartialFuncSource(arg), onError, globals)
+        return (...args: any[]) => parsedPartialFunc(args)
+      }
+      return arg
+    })
+
+    return parsedFunc(_args)
+  }
+
+  private parseFunc(source: string, onError: Function, globals?: any) {
     let cfunc = this.cfuncCache.get(source)
     if (!cfunc) {
       try {
@@ -87,16 +105,15 @@ export class Engine {
       }
     }
 
-    const contextifiedServices = instantiateServices(this.services, serviceContext)
-    const globals = { ...contextifiedServices }
-    return cfunc(args, globals).catch((err: Error) => {
-      onError(new Error(`in query query: ${source} \n ${String(err.stack)}`))
-      throw err
-    })
+    return (args?: any[]) => {
+      return (cfunc as Cfunc)(args, globals).catch((err: Error) => {
+        onError(new Error(`in query query: ${source} \n ${String(err.stack)}`))
+        throw err
+      })
+    }
   }
 
-
-  private handleRpc(rpcCommand: { service: string, method: string }, args?: any[], serviceContext?: any, onError?: any) {
+  private handleRpc(rpcCommand: { service: string, method: string }, args?: any[], contextifiedServices?: any, onError?: any) {
     // handle rpc
     const { service, method } = rpcCommand
     if (this.servicesKeys.indexOf(service) === -1) {
@@ -104,7 +121,6 @@ export class Engine {
       onError(error)
       throw error
     }
-    const contextifiedServices = instantiateServices(this.services, serviceContext)
     return contextifiedServices[service][method].apply(null, args as [any])
   }
 
