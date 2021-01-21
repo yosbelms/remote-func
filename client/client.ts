@@ -118,7 +118,9 @@ export class Client {
       if (resp && resp.error === void 0) {
         deferredPromise.resolve(resp.result)
       } else {
-        deferredPromise.reject(resp.error)
+        const error = new Error(resp.error?.message)
+        error.name = resp.error?.name ?? 'Error'
+        deferredPromise.reject(error)
       }
     }
 

@@ -9,5 +9,8 @@ export interface RequestMessage {
 export interface ResponseMessage {
   index: number
   result?: any
-  error?: string
+  error?: {
+    name: string
+    message: string
+  }
 }

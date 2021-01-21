@@ -20,6 +20,12 @@ const services = {
     one: (): Result<number> => 1,
     newDate: (): Result<Date> => new Date(),
     identity: (x: any) => x,
+    throwError: () => {
+      const e = new Error()
+      e.name = 'errorName'
+      e.message = 'errorMessage'
+      throw e
+    }
   }))
 }
 
@@ -32,6 +38,7 @@ const servers: any = {
       const engine = createEngine({
         services,
         context,
+        displayErrors: false
       })
       app.use('/', expressHandler(engine))
       this.server = app.listen(PORT, done)
@@ -47,6 +54,7 @@ const servers: any = {
       const engine = createEngine({
         services,
         context,
+        displayErrors: false
       })
       this.server = micro(microHandler(engine))
       this.server.listen(PORT, done)
@@ -161,6 +169,25 @@ describe('End to End:', () => {
         const r = await rFunc(1, sum1)
 
         expect(r).toBe(2)
+      })
+
+      it('should transport errors', async () => {
+        const client = createClient({
+          handler: httpHandler({
+            url: `http://localhost:${PORT}/`,
+            fetch: fetch as any,
+          })
+        })
+
+        const rFunc = bind(client, func(`async (x) => service.throwError()`))
+
+        try {
+          await rFunc()
+        } catch (e) {
+          expect(e.name).toBe('errorName')
+          expect(e.message).toBe('errorMessage')
+        }
+
       })
 
       afterAll(server.afterAll.bind(server))

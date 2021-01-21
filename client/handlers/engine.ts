@@ -16,8 +16,8 @@ export const engineHandler = (engine: Engine) => {
         return engine.run(source || '', args, ctx).then(result => {
           write({ index, result })
         }).catch((err = {}) => {
-          const { stack } = err
-          write({ index, error: stack || err })
+          const { name, message } = err
+          write({ index, error: { name, message }})
         })
       })
 
