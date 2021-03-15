@@ -1,6 +1,6 @@
-import 'jasmine'
-import { createClient, func, Client, bind } from '../client'
 import delay from 'delay'
+import 'jasmine'
+import { bind, Client, createClient, func, RequestHandlerInterface } from '../client'
 
 describe('Client', () => {
   describe('Batch', () => {
@@ -87,5 +87,49 @@ describe('Client', () => {
       expect(rFuncCallCount).toBe(200)
       expect(fetchCallCount).toBe(2)
     })
+
+    it('intercept results', async () => {
+      let result
+      const client = createClient({
+        deduplicate: false,
+        async handler(iface: RequestHandlerInterface) {
+          iface.getRequests().forEach(req => {
+            iface.write({ index: req.index, result: 1 })
+          })
+          iface.end()
+        },
+        async response(r) {
+          result = r.result
+        }
+      })
+
+      const rFunc = bind(client, func``)
+      await rFunc()
+
+      expect(result as unknown as number).toBe(1)
+    })
+
+    it('intercept errors', async () => {
+      let error
+      const client = createClient({
+        deduplicate: false,
+        async handler(iface: RequestHandlerInterface) {
+          iface.getRequests().forEach(req => {
+            iface.write({ index: req.index, error: new Error('x') })
+          })
+          iface.end()
+        },
+        async response(r) {
+          error = r.error
+        }
+      })
+
+      const rFunc = bind(client, func``)
+      try { await rFunc() } catch (e) { }
+
+      expect(error).toBeInstanceOf(Error)
+      expect((error as any).message).toBe('x')
+    })
+
   })
 })

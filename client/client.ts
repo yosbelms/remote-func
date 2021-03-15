@@ -1,5 +1,6 @@
 import pDefer, { DeferredPromise } from 'p-defer'
 import { RequestMessage, ResponseMessage } from './message'
+import { noop } from './util'
 
 export interface RequestHandlerInterface {
   getRequests(): RequestMessage[]
@@ -12,6 +13,8 @@ export interface ClientConfig {
   handler: (iface: RequestHandlerInterface) => void
   /** Remove duplicated requests in batch mode */
   deduplicate: boolean
+  /** Execute on each func response, either result or error */
+  response: (resp: ResponseMessage) => void
 }
 
 export interface BatchConfig {
@@ -39,6 +42,7 @@ export class Client {
     }
     this.config = {
       deduplicate: true,
+      response: noop,
       ...config,
     } as ClientConfig
 
@@ -115,6 +119,7 @@ export class Client {
     const write = (resp: ResponseMessage) => {
       const index = resp.index
       const deferredPromise = deferredPromises[index]
+      this.config.response(resp)
       if (resp && resp.error === void 0) {
         deferredPromise.resolve(resp.result)
       } else {

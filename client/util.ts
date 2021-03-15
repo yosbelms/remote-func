@@ -18,3 +18,5 @@ export const funcUrl = <T extends RemoteFunction>(url: string, rf: T): Function 
   }
   return result as Function
 }
+
+export const noop = () => { }
