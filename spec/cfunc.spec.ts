@@ -21,7 +21,8 @@ describe('Cfunc', () => {
           while(true){}
         }`
       })
-      expectAsync(cfunc()).toBeRejectedWith(TimeoutError)
+
+      await expectAsync(cfunc()).toBeRejectedWithError(TimeoutError)
     })
 
     it('on memory limit exceed', async () => {
@@ -55,7 +56,7 @@ describe('Cfunc', () => {
         source: `async() => Object = null`
       })
 
-      expectAsync(cfunc(void 0, { Object })).toBeRejected()
+      await expectAsync(cfunc(void 0, { Object })).toBeRejected()
     })
 
   })
@@ -111,7 +112,15 @@ describe('Cfunc', () => {
     })
     const param = [1, 2]
     const result = await cfunc([param])
-    expect(param).toEqual(param)
+    expect(result).toEqual(param)
+  })
+
+  // because terser uses sequence in minify
+  it('should accept sequence expression', async () => {
+    const create = () => createCfunc({
+      source: `async () => (2, 3)`
+    })
+    expect(create()).not.toThrow()
   })
 
 })

@@ -15,6 +15,9 @@ a.b(a, b, ...c)[d].e().f
 
 a = (a + a)
 
+// sequence expression
+a = (2, 3)
+
 a = () => 1
 a = () => { }
 a = async () => 1
