@@ -3,9 +3,9 @@ import { Script } from 'vm'
 import { extractTypes } from './types-extractor'
 import { createRuntime } from './runtime'
 import { compile } from './compiler'
-import { isValidIdentifier,  createGetTrap } from './util'
+import { isValidIdentifier, createGetTrap } from './util'
 import { readOnly, getConsole } from '../server/util'
-const endent = require('endent')
+import endent from 'endent'
 
 const defaultTimeout = 1 * 1000 * 60 // 1min
 const defaultMemoryLimit = 500 * 1024 * 1024 // 5Mb

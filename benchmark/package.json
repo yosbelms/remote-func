@@ -4,7 +4,8 @@
   "description": "remote-func benchmark",
   "scripts": {
     "start": "npx ts-node ./run.ts",
-    "start-concurrency": "node --inspect --require ts-node/register ./run-concurrency.ts"
+    "start-concurrency": "node --inspect --require ts-node/register ./run-concurrency.ts",
+    "install-updates": "npx updates -uU && npm i"
   },
   "engines": {
     "node": ">=12"
@@ -12,15 +13,16 @@
   "author": "Yosbel Marin",
   "license": "MIT",
   "dependencies": {
-    "apollo-server": "^2.9.16",
-    "autocannon": "^4.6.0",
-    "cli-table": "^0.3.1",
-    "cli-table3": "^0.5.1",
+    "apollo-server": "^2.24.0",
+    "autocannon": "^7.3.0",
+    "cli-table": "^0.3.6",
+    "cli-table3": "^0.6.0",
     "colors": "^1.4.0",
     "express": "^4.17.1",
+    "graphql": "^15.5.0",
     "node-fetch": "^2.6.1",
-    "p-settle": "^4.0.1",
-    "p-timeout": "^3.2.0",
-    "ts-node": "^8.6.2"
+    "p-settle": "^4.1.1",
+    "p-timeout": "^4.1.0",
+    "ts-node": "^9.1.1"
   }
 }

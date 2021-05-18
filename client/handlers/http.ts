@@ -24,7 +24,7 @@ const handleFetchStreamResponse = (
   if (response.status === 207) {
     const textDecoder = new TextDecoder()
     const reader = response.body?.getReader()
-    const readChunk = (result: ReadableStreamReadResult<Uint8Array>) => {
+    const readChunk = (result: ReadableStreamDefaultReadResult<Uint8Array>) => {
       if (result.done) {
         close()
       } else {
