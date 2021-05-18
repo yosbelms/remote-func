@@ -42,7 +42,7 @@
     "p-defer": "^3.0.0",
     "p-settle": "^4.1.1",
     "rimraf": "^3.0.2",
-    "terser": "^5.7.0"
+    "terser": "^4.8.0"
   },
   "devDependencies": {
     "@istanbuljs/nyc-config-typescript": "^1.0.1",
