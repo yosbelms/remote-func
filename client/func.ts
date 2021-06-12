@@ -1,3 +1,4 @@
+import mimicFn from 'mimic-fn'
 import { createPartialFunc } from '../server/partial-func'
 import { createRpcCommand } from '../server/rpc'
 
@@ -89,6 +90,8 @@ export function bind<T>(client: any, target: any): any {
     })
     return client.request(source, _args)
   }
+
+  mimicFn(boundRemoteFunction, target)
   boundRemoteFunction.target = target
   return boundRemoteFunction as unknown as (T & BoundRemoteFunction)
 }
