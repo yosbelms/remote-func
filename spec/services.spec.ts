@@ -63,8 +63,12 @@ describe('services', () => {
       serviceInstance.exampleService.endpoint(0)
 
       expect(logs).toEqual([
-        { type: 'service', name: 'exampleService' },
-        { type: 'endpoint', name: 'endpoint', args: [0] }
+        {
+          type: 'call-endpoint',
+          service: 'exampleService',
+          endpoint: 'endpoint',
+          args: [0]
+        }
       ])
     })
   })

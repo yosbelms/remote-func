@@ -1,6 +1,7 @@
 import { readOnly, deepClone, DeepClone, noop, isFunction } from './util'
 
 const SERVICE = Symbol('service')
+const SERVICE_NAME = Symbol('service-name')
 
 /** Utility to type endpoint results */
 export type Result<T> = DeepClone<T>
@@ -38,7 +39,12 @@ const instantiateService = (service: Function, ctx?: ServiceBaseContext) => {
         throw new Error(`'${prop}' is not a function`)
       }
       return (...args: any[]) => {
-        log({ type: 'endpoint', name: prop, args })
+        log({
+          type: 'call-endpoint',
+          service: (service as any)[SERVICE_NAME],
+          endpoint: prop,
+          args
+        })
         return deepClone(endpoint.apply(serviceInstance, args))
       }
     }
@@ -75,16 +81,16 @@ export const instantiateServices = <Srvcs extends Services>(
   services: Srvcs,
   ctx?: ServiceBaseContext,
 ): Srvcs => {
-  let log = getContextLogger(ctx)
   const _services = readServices(services)
   const servicesMemo = new Map<string, any>()
   return readOnly(_services, {
     get(target: any, prop: any): any {
-      log({ type: 'service', name: prop })
       let serviceInstance = servicesMemo.get(prop)
       if (!serviceInstance) {
         const service = target[prop]
-        if (!isService(service)) {
+        if (isService(service)) {
+          service[SERVICE_NAME] = prop
+        } else {
           return service
         }
         serviceInstance = instantiateService(service, ctx)
