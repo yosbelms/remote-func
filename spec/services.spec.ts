@@ -53,6 +53,20 @@ describe('services', () => {
       const serviceInstance = instantiateServices({ exampleService })
       expect(serviceInstance.exampleService.endpoint2()).toEqual(2)
     })
+
+    it('should log service and endpoints if there is a "log" function in context', () => {
+      const logs: any[] = []
+      const log = (msg: any) => logs.push(msg)
+
+      const ctx = { ...ctxExample, log }
+      const serviceInstance = instantiateServices({ exampleService }, ctx)
+      serviceInstance.exampleService.endpoint(0)
+
+      expect(logs).toEqual([
+        { type: 'service', name: 'exampleService' },
+        { type: 'endpoint', name: 'endpoint', args: [0] }
+      ])
+    })
   })
 
 })

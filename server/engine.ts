@@ -1,6 +1,6 @@
 import { mins, isFunction, noop, isString } from './util'
 import { EvalError } from './error'
-import { instantiateServices, Services } from './service'
+import { ServiceBaseContext, instantiateServices, Services } from './service'
 import { Cache } from './cache'
 import { createCfunc, Cfunc } from '../cfunc'
 import { RequestContext } from './http'
@@ -13,7 +13,7 @@ export interface EngineConfig {
   /** Path to a file containing services */
   servicesPath: String
   /** Transform query context in service context */
-  context: (reqCtx: RequestContext) => any
+  context: (reqCtx: RequestContext) => ServiceBaseContext
   /** Max execution time for query functions */
   timeout: number,
   /** Whether display query errors or not */
@@ -65,7 +65,7 @@ export class Engine {
     return this.execute(source, args, ctx)
   }
 
-  private execute(source: string, args?: any[], serviceContext?: any) {
+  private execute(source: string, args?: any[], serviceContext?: ServiceBaseContext) {
     const onError = this.config.displayErrors ? console.error.bind(console) : noop
 
     const contextifiedServices = instantiateServices(this.services, serviceContext)
