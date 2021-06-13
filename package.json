@@ -1,6 +1,6 @@
 {
   "name": "remote-func",
-  "version": "0.5.3",
+  "version": "0.5.4",
   "description": "JavaScript as the query language for your API",
   "main": "client/index.js",
   "repository": "https://github.com/yosbelms/remote-func",
@@ -47,6 +47,7 @@
   },
   "devDependencies": {
     "@istanbuljs/nyc-config-typescript": "^1.0.1",
+    "@types/express-serve-static-core": "^4.17.21",
     "@types/glob": "^7.1.3",
     "@types/jasmine": "^3.7.7",
     "@types/node-fetch": "^2.5.10",
