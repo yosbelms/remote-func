@@ -1,4 +1,4 @@
-import { mins, isFunction, noop, isString } from './util'
+import { mins, isFunction, noop, isString, identity } from './util'
 import { EvalError } from './error'
 import { ServiceBaseContext, instantiateServices, Services } from './service'
 import { Cache } from './cache'
@@ -14,6 +14,8 @@ export interface EngineConfig {
   servicesPath: String
   /** Transform query context in service context */
   context: (reqCtx: RequestContext) => ServiceBaseContext
+  /** Transform query context in service context */
+  source: (src: string) => Promise<string> | string
   /** Max execution time for query functions */
   timeout: number,
   /** Whether display query errors or not */
@@ -27,6 +29,7 @@ export class Engine {
   private services: Services
   private servicesKeys: string[]
   private servicesModule: any
+  private readSource: (src: string) => Promise<string> | string
 
   constructor(config: Partial<EngineConfig>) {
     this.config = {
@@ -35,6 +38,7 @@ export class Engine {
       ...config,
     }
 
+    this.readSource = this.config.source || identity
     this.cfuncCache = new Cache()
     this.services = config.services || {}
     this.servicesKeys = Object.keys(this.services)
@@ -62,7 +66,8 @@ export class Engine {
     if (this.servicesModule) await this.servicesModule
     const createContext: any = isFunction(this.config.context) ? this.config.context : noop
     const ctx = await createContext(queryContext)
-    return this.execute(source, args, ctx)
+    const src = await this.readSource(source)
+    return this.execute(src, args, ctx)
   }
 
   private execute(source: string, args?: any[], serviceContext?: ServiceBaseContext) {
