@@ -59,7 +59,8 @@ export class Client {
 
   private scheduleBatch(timeout?: number) {
     this.unscheduleBatch()
-    let schedule = Number(timeout) >= 0 ? (fn: any) => setTimeout(fn, timeout as number) : () => Infinity
+    const _timeout = Number(timeout)
+    let schedule = _timeout >= 0 ? (fn: any) => setTimeout(fn, _timeout) : () => Infinity
     this.batchScheduleTimeout = schedule(this.flush.bind(this))
   }
 
@@ -107,8 +108,8 @@ export class Client {
 
   /** Flush batched requests */
   flush() {
-    if (this.batchedRequests.length === 0) return
     this.unscheduleBatch()
+    if (this.batchedRequests.length === 0) return
     const { handler } = this.config
     const requests = this.batchedRequests
     const deferredPromises = this.batchedRequestsDeferredPromises
