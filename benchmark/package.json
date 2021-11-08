@@ -13,7 +13,7 @@
   "author": "Yosbel Marin",
   "license": "MIT",
   "dependencies": {
-    "apollo-server": "^2.24.0",
+    "apollo-server": "^2.25.3",
     "autocannon": "^7.3.0",
     "cli-table": "^0.3.6",
     "cli-table3": "^0.6.0",
