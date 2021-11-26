@@ -67,10 +67,10 @@ export class Engine {
     const createContext: any = isFunction(this.config.context) ? this.config.context : noop
     const ctx = await createContext(queryContext)
     const src = await this.readSource(source)
-    return this.execute(src, args, ctx)
+    return await this.execute(src, args, ctx)
   }
 
-  private execute(source: string, args?: any[], serviceContext?: ServiceBaseContext) {
+  private async execute(source: string, args?: any[], serviceContext?: ServiceBaseContext) {
     const onError = this.config.displayErrors ? console.error.bind(console) : noop
 
     const contextifiedServices = instantiateServices(this.services, serviceContext)
@@ -82,13 +82,15 @@ export class Engine {
 
     const parsedFunc = this.parseFunc(source, onError, globals)
 
-    const _args = (args || []).map(arg => {
+    const _args = await Promise.all((args || []).map(async arg => {
       if (isString(arg) && isPartialFunc(arg)) {
-        const parsedPartialFunc = this.parseFunc(getPartialFuncSource(arg), onError, globals)
+        // read source
+        const partialFunctionSource = await this.readSource(getPartialFuncSource(arg))
+        const parsedPartialFunc = this.parseFunc(partialFunctionSource, onError, globals)
         return (...args: any[]) => parsedPartialFunc(args)
       }
       return arg
-    })
+    }))
 
     return parsedFunc(_args)
   }
