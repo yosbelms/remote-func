@@ -89,8 +89,8 @@ export const handleHttpRequest = async (iface: HttpHandlerInterface) => {
     // wait for all engine run results
     await pSettle(resultPromises)
   } catch (err) {
-    iface.setStatusCode(getHttpStatusFromError(err))
-    iface.write(err.stack || err)
+    iface.setStatusCode(getHttpStatusFromError(err as any))
+    iface.write((err as Error).stack || err)
   } finally {
     iface.end()
   }

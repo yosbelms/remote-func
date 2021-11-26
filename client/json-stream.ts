@@ -32,7 +32,7 @@ export const createParser = <T>(options: Partial<{
       const data = JSON.parse(str)
       onData(data, str)
     } catch (err) {
-      onError(err, str)
+      onError(err as Error, str)
     }
   }
 
@@ -93,7 +93,7 @@ export const createStringifier = <T>(options: Partial<{
         let str = JSON.stringify(data) + delimiter
         onData(str, data)
       } catch (err) {
-        onError(err, data)
+        onError(err as Error, data)
       }
     },
 
