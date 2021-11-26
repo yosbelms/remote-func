@@ -58,6 +58,7 @@ Example usage with Babel:
     test: /regex/,
     transpile: () => {},
     transform: () => {},
+    minify: true,
   }]
 ]
 
@@ -85,6 +86,7 @@ export default ({ types: t }: { types: any }) => {
           transpile = defaultTypescriptTranspile,
           test = defaultTestRegex,
           transform = identity,
+          minify = true,
         } = state.opts
 
         if (!filenamePassTest(test, filename)) return
@@ -92,11 +94,42 @@ export default ({ types: t }: { types: any }) => {
         if (calleePath.node.name === funcIdentifier) {
           const firstArgPath = path.get('arguments.0')
 
+          /// state.file.opts.filename
+
+          /*
+
+          #Line number
+
+          const location = path.node.loc;
+
+          path.replaceWith(
+              location && location.start.line ?
+                  types.numericLiteral(location.start.line) :
+                  void0Expression
+          );
+
+
+          #Dirname
+
+          var filename = path.resolve(state.file.opts.filename);
+          var results = uses(prog, ['__dirname', '__filename']);
+
+          if (results.__dirname) {
+            inject(t, prog, '__dirname', path.dirname(filename));
+          }
+
+          if (results.__filename) {
+            inject(t, prog, '__filename', filename);
+          }
+           
+          */
+
+
           if (t.isFunctionExpression(firstArgPath) || t.isArrowFunctionExpression(firstArgPath)) {
             const source = firstArgPath.getSource()
             let sourceOutput: string = transpile(source).trim()
 
-            if (isProduction()) {
+            if (isProduction() && minify) {
               // because terser doesn't compiles when the input code is  async () => ...
               // so we add a prefix and remove after minify
               sourceOutput = `x=${sourceOutput}`
