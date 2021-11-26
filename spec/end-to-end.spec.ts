@@ -184,8 +184,8 @@ describe('End to End:', () => {
         try {
           await rFunc()
         } catch (e) {
-          expect(e.name).toBe('errorName')
-          expect(e.message).toBe('errorMessage')
+          expect((e as Error).name).toBe('errorName')
+          expect((e as Error).message).toBe('errorMessage')
         }
 
       })

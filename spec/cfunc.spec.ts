@@ -37,7 +37,7 @@ describe('Cfunc', () => {
       try {
         await cfunc()
       } catch (e) {
-        expect(e.constructor).toBe(MemoryLimitError)
+        expect((e as Error).constructor).toBe(MemoryLimitError)
       }
     })
 
