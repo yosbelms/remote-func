@@ -57,7 +57,7 @@
     "jasmine": "^3.10.0",
     "jasmine-ts": "^0.4.0",
     "micro": "^9.3.4",
-    "node-fetch": "^2.6.1",
+    "node-fetch": "^3.1.1",
     "nyc": "^15.1.0",
     "sane": "^5.0.1",
     "ts-node": "^10.4.0",
