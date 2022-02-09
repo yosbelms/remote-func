@@ -1,6 +1,6 @@
 import fs from 'fs'
 import path from 'path'
-import globby from 'globby'
+import { globby } from 'globby'
 import makeDir from 'make-dir'
 import rimraf from 'rimraf'
 
@@ -12,7 +12,7 @@ export const extractDts = async (apiModulePath: string, destinationDir: string) 
   if (fs.existsSync(signatureFilePath)) {
     rimraf.sync(destinationDir)
   }
-  
+
   const dtsDir = await makeDir(path.join(destinationDir, '/dts'))
 
   fs.writeFileSync(signatureFilePath, '')

@@ -8,9 +8,11 @@ export interface RequestHandlerInterface {
   end: (error?: any) => void
 }
 
+type Handler = (iface: RequestHandlerInterface) => void
+
 export interface ClientConfig {
   /** Handle requests */
-  handler: (iface: RequestHandlerInterface) => void
+  handler: Handler
   /** Remove duplicated requests in batch mode */
   deduplicate: boolean
   /** Execute on each func response, either result or error */
@@ -40,16 +42,20 @@ export class Client {
     if (!config.handler) {
       throw new Error('invalid handler')
     }
+    this.config = {} as ClientConfig
+    this.setConfig(config)
+    this.isUsingBatch = false
+    this.batchedRequests = []
+    this.batchedRequestsDeferredPromises = []
+    this.requestPromiseDedupeMap = new Map()
+  }
+
+  setConfig(config: Partial<ClientConfig>) {
     this.config = {
       deduplicate: true,
       response: noop,
       ...config,
     } as ClientConfig
-
-    this.isUsingBatch = false
-    this.batchedRequests = []
-    this.batchedRequestsDeferredPromises = []
-    this.requestPromiseDedupeMap = new Map()
   }
 
   private unscheduleBatch() {

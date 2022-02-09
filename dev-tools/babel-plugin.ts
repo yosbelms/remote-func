@@ -36,7 +36,7 @@ const defaultTypescriptTranspile = (source: string) => {
     })
     return transpileOutput.outputText
   } catch (e) {
-    throw new Error(`${__filename}: ${e.stack}`)
+    throw new Error(`${__filename}: ${(e as Error).stack}`)
   }
 }
 
