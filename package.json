@@ -22,7 +22,7 @@
     "build-umd": "browserify ./client/index.js -o ./umd.js -s RemoteFunc",
     "watch": "npm run clean && npx sane 'npm run build' --glob='*.ts'",
     "prepublishOnly": "npm run clean && npm run build && npm run build-umd && npm run test",
-    "install-updates": "npx updates -uU -e p-defer,p-settle,node-fetch,@types/node-fetch,terser,mimic-fn && npm i"
+    "install-updates": "npx updates -uU -e p-defer,p-settle,node-fetch,@types/node-fetch,terser,mimic-fn,globby && npm i"
   },
   "bin": "./bin/remote-func.js",
   "author": "yosbelms",
@@ -35,7 +35,7 @@
     "@types/node": "^16.11.10",
     "@types/rimraf": "^3.0.2",
     "endent": "^2.1.0",
-    "globby": "^12.0.2",
+    "globby": "^11.1.0",
     "koa-compose": "^4.1.0",
     "make-dir": "^3.1.0",
     "mimic-fn": "^3.1.0",
