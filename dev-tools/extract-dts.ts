@@ -1,6 +1,6 @@
 import fs from 'fs'
 import path from 'path'
-import { globby } from 'globby'
+import globby from 'globby'
 import makeDir from 'make-dir'
 import rimraf from 'rimraf'
 
