@@ -40,17 +40,26 @@ describe('util', () => {
 
     it('should stop on max depth', () => {
       const depth = 10
-      const source = { depth: 1, source: {} } as any
-      source.source = source
+      const source = { depth: 1, child: {} } as any
+      source.child = source
 
       let cloned = deepClone(source, depth)
+
       let count = 0
-      while (cloned) {
+      while (cloned && cloned.child) {
         count += cloned.depth
-        cloned = cloned.source
+        cloned = cloned.child
       }
 
       expect(count).toBe(depth)
+    })
+
+    it('should not stop on large sets because max depth', () => {
+      const depth = 10
+      const source = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+      const cloned = deepClone(source, depth)
+      const empty = cloned.filter(item => !item)
+      expect(empty.length).toBe(0)
     })
   })
 
