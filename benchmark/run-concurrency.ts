@@ -2,7 +2,7 @@ import pSettle from 'p-settle'
 import pTimeout from 'p-timeout'
 import fetch from 'node-fetch'
 import colors from 'colors'
-const Table = require('cli-table3')
+import Table from 'cli-table3'
 import { func } from '../client'
 import { funcUrl } from '../client/util'
 import './remote-func-server'
@@ -169,7 +169,7 @@ const run = async ({
         { content: colors.gray(String(summary?.meanLatency)), hAlign: 'right' },
       ])
     } catch (e) {
-      console.log(e.stack)
+      console.log((e as Error).stack)
     }
 
     while (afters.length) {
