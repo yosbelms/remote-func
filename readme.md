@@ -227,7 +227,7 @@ TypeScript needs to know about your services types in order to compile. Remote-f
 You can achieve it by executing the following command:
 
 ```ts
-npx remote-func --extract-dts --source='path/to/services.ts' --out='dts/for/client'
+npx remote-func extract-dts --source='path/to/services.ts' --out='dts/for/client'
 ```
 
 After run it you should have type descriptors(`.d.ts`) files corresponding to your API module in the specified directory. At this point you can import the services module from the client source code and write queries as if you were accessing endpoints directly from the client source code.
