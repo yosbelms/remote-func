@@ -65,13 +65,16 @@ const bindServiceRpc = <T>(client: Client, serviceName: string): T => {
 export const func: Func = (client: Client | TemplateStringsArray | Function | string, sourceInput?: TemplateStringsArray | Function | string, sourceLoc?: SourceLocation): RemoteFunction => {
   let _client: any
   let _sourceInput: typeof sourceInput
+  let _sourceLoc: SourceLocation | undefined
 
   if (client && (client as Client).request) {
     _client = client
     _sourceInput = sourceInput
+    _sourceLoc = sourceLoc
   } else {
     _client = void 0
     _sourceInput = client as typeof sourceInput
+    _sourceLoc = sourceInput as unknown as SourceLocation
   }
 
   if (typeof _sourceInput === 'string') {
@@ -84,7 +87,7 @@ export const func: Func = (client: Client | TemplateStringsArray | Function | st
     throw new Error(`wrong use of 'func', unsupported source type`)
   }
 
-  const remoteFunc = createRemoteFunc(_sourceInput, sourceLoc)
+  const remoteFunc = createRemoteFunc(_sourceInput, _sourceLoc)
   if (_client) {
     return bind(_client, remoteFunc)
   }

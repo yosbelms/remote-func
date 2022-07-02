@@ -7,10 +7,7 @@ describe('dev tools', () => {
     const src = `
       import { func } from 'remote-func/client'
       const findTitlesByPublisher = func(obj, async (title) => {
-        const allBooks = await books.getAll()
-        return allBooks
-          .filter(book => book.publisher == title)
-          .map(book => book.title)
+        const x = 1
       })
     `
 
