@@ -120,11 +120,7 @@ export default ({ types: t }: { types: any }) => {
 
           path.replaceWith(t.callExpression(t.identifier(calleePath.node.name), [
             ...newArgs,
-            t.objectExpression([
-              t.objectProperty(t.identifier('filename'), t.stringLiteral(relativeFilename)),
-              t.objectProperty(t.identifier('line'), t.numericLiteral(location.line)),
-              t.objectProperty(t.identifier('column'), t.numericLiteral(location.column)),
-            ])
+            t.stringLiteral(`${relativeFilename}:${location.line}:${location.column}`)
           ]))
 
           path.skip()

@@ -6,11 +6,8 @@ interface Client {
   request(source: string, args: any[]): any
 }
 
-export interface SourceLocation {
-  filename: string
-  line: number
-  column: number
-}
+// example: /filename.ts:10:20
+export type SourceLocation = string
 
 export interface RemoteFunction extends Function {
   (...args: any[]): any

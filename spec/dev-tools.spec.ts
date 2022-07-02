@@ -20,8 +20,6 @@ describe('dev tools', () => {
       ]
     })
 
-    expect(String(out?.code).indexOf('/myfile.ts')).toBeGreaterThan(0)
-    expect(String(out?.code).indexOf('line: 3')).toBeGreaterThan(0)
-    expect(String(out?.code).indexOf('column: 36')).toBeGreaterThan(0)
+    expect(String(out?.code).indexOf('/myfile.ts:3:36')).toBeGreaterThan(0)
   })
 })

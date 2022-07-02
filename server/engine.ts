@@ -108,8 +108,8 @@ export class Engine {
       } catch (err) {
         let location = ''
         if (queryContext && queryContext.sourceLoc) {
-          const meta = queryContext.sourceLoc
-          location = `Client location: ${meta.filename}:${meta.line}:${meta.column}`
+          const sourceLoc = queryContext.sourceLoc
+          location = `Source location: ${sourceLoc}`
         }
         const error = new EvalError(`in query: ${location} \n ${source} \n ${String(err)}`)
         onError(error)
