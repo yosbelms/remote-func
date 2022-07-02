@@ -6,7 +6,7 @@ export const isPartialFunc = (str: string): boolean => {
 
 /** return partial func source */
 export const getPartialFuncSource = (partialFuncCommandStr: string): string => {
-  return partialFuncCommandStr.substr(partialFuncKeyworkd.length).trim()
+  return partialFuncCommandStr.substring(partialFuncKeyworkd.length).trim()
 }
 
 /** Create partialFunc command */

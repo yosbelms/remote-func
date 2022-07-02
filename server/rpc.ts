@@ -8,7 +8,7 @@ export const isRpcCommand = (source: string): boolean => {
 
 /** Parse rpc command */
 export const parseRpcCommand = (rpcCommandStr: string): { service: string, method: string } => {
-  const target = rpcCommandStr.substr(rpcKeyworkd.length).trim()
+  const target = rpcCommandStr.substring(rpcKeyworkd.length).trim()
   const splitted = target.split(rpcTargetSeparator)
   return {
     service: splitted[0],

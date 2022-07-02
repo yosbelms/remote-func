@@ -14,7 +14,7 @@ export interface EngineConfig {
   servicesPath: String
   /** Transform query context in service context */
   context: (reqCtx: RequestContext) => ServiceBaseContext
-  /** Transform query context in service context */
+  /** Read source dynamically */
   source: (src: string) => Promise<string> | string
   /** Max execution time for query functions */
   timeout: number,
@@ -67,10 +67,10 @@ export class Engine {
     const createContext: any = isFunction(this.config.context) ? this.config.context : noop
     const ctx = await createContext(queryContext)
     const src = await this.readSource(source)
-    return await this.execute(src, args, ctx)
+    return await this.execute(src, args, ctx, queryContext)
   }
 
-  private async execute(source: string, args?: any[], serviceContext?: ServiceBaseContext) {
+  private async execute(source: string, args?: any[], serviceContext?: ServiceBaseContext, queryContext?: any) {
     const onError = this.config.displayErrors ? console.error.bind(console) : noop
 
     const contextifiedServices = instantiateServices(this.services, serviceContext)
@@ -80,7 +80,7 @@ export class Engine {
       return this.handleRpc(parseRpcCommand(source), args, contextifiedServices, onError)
     }
 
-    const parsedFunc = this.parseFunc(source, onError, globals)
+    const parsedFunc = this.parseFunc(source, onError, globals, queryContext)
 
     const _args = await Promise.all((args || []).map(async arg => {
       if (isString(arg) && isPartialFunc(arg)) {
@@ -95,7 +95,7 @@ export class Engine {
     return parsedFunc(_args)
   }
 
-  private parseFunc(source: string, onError: Function, globals?: any) {
+  private parseFunc(source: string, onError: Function, globals?: any, queryContext?: any) {
     let cfunc = this.cfuncCache.get(source)
     if (!cfunc) {
       try {
@@ -106,7 +106,12 @@ export class Engine {
         })
         this.cfuncCache.set(source, cfunc)
       } catch (err) {
-        const error = new EvalError(`in query: ${source} \n ${String(err)}`)
+        let location = ''
+        if (queryContext && queryContext.sourceLoc) {
+          const meta = queryContext.sourceLoc
+          location = `Client location: ${meta.filename}:${meta.line}:${meta.column}`
+        }
+        const error = new EvalError(`in query: ${location} \n ${source} \n ${String(err)}`)
         onError(error)
         throw error
       }

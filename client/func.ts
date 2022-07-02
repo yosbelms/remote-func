@@ -6,25 +6,33 @@ interface Client {
   request(source: string, args: any[]): any
 }
 
+export interface SourceLocation {
+  filename: string
+  line: number
+  column: number
+}
+
 export interface RemoteFunction extends Function {
   (...args: any[]): any
   isRemoteFunction?: boolean
   client?: Client
   source?: string
   bound?: boolean
+  sourceLoc?: SourceLocation
 }
 
 export interface BoundRemoteFunction extends Function {
   remoteFunction: RemoteFunction
 }
 
-const createRemoteFunc = (source: string): RemoteFunction => {
+const createRemoteFunc = (source: string, sourceLoc?: SourceLocation): RemoteFunction => {
   const remoteFunction = () => {
     throw new Error('Unbound remote function')
   }
   remoteFunction.isRemoteFunction = true
   remoteFunction.source = source
   remoteFunction.bound = false
+  remoteFunction.sourceLoc = sourceLoc
   return remoteFunction as RemoteFunction
 }
 
@@ -45,7 +53,7 @@ const bindServiceRpc = <T>(client: Client, serviceName: string): T => {
 /** Create a new remote function */
 export function func(sourceInput: TemplateStringsArray | Function | string): RemoteFunction;
 export function func<RpcT>(client: Client, sourceInput: TemplateStringsArray | Function | string): RpcT & BoundRemoteFunction;
-export function func(client: Client | TemplateStringsArray | Function | string, sourceInput?: TemplateStringsArray | Function | string): RemoteFunction {
+export function func(client: Client | TemplateStringsArray | Function | string, sourceInput?: TemplateStringsArray | Function | string, sourceLoc?: SourceLocation): RemoteFunction {
   let _client: any
   let _sourceInput: typeof sourceInput
 
@@ -67,7 +75,7 @@ export function func(client: Client | TemplateStringsArray | Function | string, 
     throw new Error(`wrong use of 'func', unsupported source type`)
   }
 
-  const remoteFunc = createRemoteFunc(_sourceInput)
+  const remoteFunc = createRemoteFunc(_sourceInput, sourceLoc)
   if (_client) {
     return bind(_client, remoteFunc)
   }
@@ -94,6 +102,7 @@ export function bind<T>(client: any, target: any): any {
     throw new Error('Remote function already bound')
   }
   const source = target.source as string
+  const sourceLoc = target.sourceLoc
   const boundRemoteFunction = (...args: any[]) => {
     const _args = (args || []).map((arg: RemoteFunction) => {
       if (typeof arg === 'function' && arg.isRemoteFunction) {
@@ -101,7 +110,7 @@ export function bind<T>(client: any, target: any): any {
       }
       return arg
     })
-    return client.request(source, _args)
+    return client.request(source, _args, sourceLoc)
   }
 
   mimicFn(boundRemoteFunction, target)

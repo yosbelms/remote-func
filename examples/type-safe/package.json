@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "npx babel-node --presets @babel/preset-typescript,@babel/preset-env --plugins \"../../dev-tools/babel-plugin\" --extensions \".ts\",\".js\" -- ./start.ts",
-    "extract-dts": "remote-func --extract-dts --source='./server/services.ts' --out='./client/services-dts'"
+    "extract-dts": "remote-func extract-dts --source='./server/services.ts' --out='./client/services-dts'"
   },
   "author": "",
   "license": "ISC",
@@ -19,6 +19,6 @@
   "dependencies": {
     "express": "^4.17.1",
     "isomorphic-unfetch": "^3.0.0",
-    "remote-func": "../../"
+    "remote-func": "file:../.."
   }
 }

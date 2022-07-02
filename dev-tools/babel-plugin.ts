@@ -81,7 +81,7 @@ export default ({ types: t }: { types: any }) => {
         if (!state.$funcIsImported) return
 
         const file = state.file
-        const filename = file.opts.filename
+        const { filename = '', root = '' } = file.opts
         const {
           transpile = defaultTypescriptTranspile,
           test = defaultTestRegex,
@@ -91,56 +91,43 @@ export default ({ types: t }: { types: any }) => {
 
         if (!filenamePassTest(test, filename)) return
         const calleePath = path.get('callee')
+
         if (calleePath.node.name === funcIdentifier) {
-          const firstArgPath = path.get('arguments.0')
+          const relativeFilename = filename ? filename.substring(root?.length || 0) : ''
+          const location = path.node.loc?.start ?? {}
 
-          /// state.file.opts.filename
+          const newArgs = path.node.arguments.map((argNode: any, pos: number) => {
+            const argNodePath = path.get('arguments.' + pos)
+            if (t.isFunctionExpression(argNodePath) || t.isArrowFunctionExpression(argNodePath)) {
+              const source = argNodePath.getSource()
+              let sourceOutput: string = transpile(source).trim()
 
-          /*
+              if (isProduction() && minify) {
+                // because terser doesn't compiles when the input code is  async () => ...
+                // so we add a prefix and remove after minify
+                sourceOutput = `x=${sourceOutput}`
+                sourceOutput = String(terser.minify(sourceOutput).code)
+                sourceOutput = sourceOutput.substring(sourceOutput.indexOf('=') + 1)
+              }
 
-          #Line number
-
-          const location = path.node.loc;
-
-          path.replaceWith(
-              location && location.start.line ?
-                  types.numericLiteral(location.start.line) :
-                  void0Expression
-          );
-
-
-          #Dirname
-
-          var filename = path.resolve(state.file.opts.filename);
-          var results = uses(prog, ['__dirname', '__filename']);
-
-          if (results.__dirname) {
-            inject(t, prog, '__dirname', path.dirname(filename));
-          }
-
-          if (results.__filename) {
-            inject(t, prog, '__filename', filename);
-          }
-           
-          */
-
-
-          if (t.isFunctionExpression(firstArgPath) || t.isArrowFunctionExpression(firstArgPath)) {
-            const source = firstArgPath.getSource()
-            let sourceOutput: string = transpile(source).trim()
-
-            if (isProduction() && minify) {
-              // because terser doesn't compiles when the input code is  async () => ...
-              // so we add a prefix and remove after minify
-              sourceOutput = `x=${sourceOutput}`
-              sourceOutput = String(terser.minify(sourceOutput).code)
-              sourceOutput = sourceOutput.substr(sourceOutput.indexOf('=') + 1)
+              // transform
+              sourceOutput = transform(sourceOutput)
+              return t.stringLiteral(sourceOutput)
             }
 
-            // transform
-            sourceOutput = transform(sourceOutput)
-            firstArgPath.replaceWith(t.stringLiteral(sourceOutput))
-          }
+            return t.cloneNode(argNodePath.node)
+          })
+
+          path.replaceWith(t.callExpression(t.identifier(calleePath.node.name), [
+            ...newArgs,
+            t.objectExpression([
+              t.objectProperty(t.identifier('filename'), t.stringLiteral(relativeFilename)),
+              t.objectProperty(t.identifier('line'), t.numericLiteral(location.line)),
+              t.objectProperty(t.identifier('column'), t.numericLiteral(location.column)),
+            ])
+          ]))
+
+          path.skip()
         }
       }
     }

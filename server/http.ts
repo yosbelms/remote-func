@@ -3,12 +3,14 @@ import { Engine, createEngine } from './engine'
 import { BaseError, ErrorType } from './error'
 import { createParser, createStringifier } from '../client/json-stream'
 import { RequestMessage, ResponseMessage } from '../client/message'
+import { SourceLocation } from '../client'
 
 export interface RequestContext {
   request: any
   response: string
   source: string
   args: any[]
+  sourceLoc: SourceLocation
 }
 
 export interface HttpHandlerInterface {
@@ -70,14 +72,14 @@ export const handleHttpRequest = async (iface: HttpHandlerInterface) => {
     // init JSON stream parser
     const parser = createParser<RequestMessage>({
       onData(data: RequestMessage) {
-        const { index, source, args } = data
-        const ctx: RequestContext = { ...initialContext, source, args }
+        const { index, source, args, sourceLoc } = data
+        const ctx: RequestContext = { ...initialContext, source, args, sourceLoc }
         const resultPromise = engine.run(source || '', args, ctx).then(result => {
-          strigifier.write({ index, result })
+          strigifier.write({ index, result, sourceLoc })
         }).catch((err = {}) => {
           const name = err.name
           const message = err.message
-          strigifier.write({ index, error: { name, message } })
+          strigifier.write({ index, error: { name, message }, sourceLoc })
         })
         resultPromises.push(resultPromise)
       }

@@ -1,4 +1,5 @@
 import pDefer, { DeferredPromise } from 'p-defer'
+import { SourceLocation } from './func'
 import { RequestMessage, ResponseMessage } from './message'
 import { noop } from './util'
 
@@ -71,7 +72,7 @@ export class Client {
   }
 
   /** Execute a client request */
-  request(source: string, args: any[]): Promise<ResponseMessage> {
+  request(source: string, args: any[], sourceLoc?: SourceLocation): Promise<ResponseMessage> {
     const { deduplicate } = this.config
     const idx = this.batchedRequests.length
     const deferredPromise = pDefer<ResponseMessage>()
@@ -81,6 +82,7 @@ export class Client {
       index: idx,
       source,
       args,
+      sourceLoc,
     }
 
     if (deduplicate && existingPromise) {

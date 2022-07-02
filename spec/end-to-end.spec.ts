@@ -190,6 +190,18 @@ describe('End to End:', () => {
 
       })
 
+      it('should auto bind if client is passed to func', async () => {
+        const client = createClient({
+          handler: httpHandler({
+            url: `http://localhost:${PORT}/`,
+            fetch: fetch as any,
+          })
+        })
+        const rFunc = func(client, `async () => 5`)
+
+        expect(await rFunc()).toBe(5)
+      })
+
       afterAll(server.afterAll.bind(server))
     })
   })
