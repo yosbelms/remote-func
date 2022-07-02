@@ -28,12 +28,6 @@ const createRemoteFunc = (source: string): RemoteFunction => {
   return remoteFunction as RemoteFunction
 }
 
-export interface Func {
-  <T extends Function>(fn: T): T
-  (tsa: TemplateStringsArray): RemoteFunction
-  (str: string): RemoteFunction
-}
-
 /** Bind a service to a client in such way that the service can be used outside of a query function through RPC */
 const bindServiceRpc = <T>(client: Client, serviceName: string): T => {
   const binds: any = {}
@@ -49,18 +43,37 @@ const bindServiceRpc = <T>(client: Client, serviceName: string): T => {
 }
 
 /** Create a new remote function */
-export const func: Func = (sourceInput: TemplateStringsArray | Function | string): RemoteFunction => {
-  if (typeof sourceInput === 'string') {
-    sourceInput = sourceInput
-  } else if (Array.isArray(sourceInput)) {
-    sourceInput = sourceInput.join('')
-  } else if (typeof sourceInput === 'function') {
+export function func(sourceInput: TemplateStringsArray | Function | string): RemoteFunction;
+export function func<RpcT>(client: Client, sourceInput: TemplateStringsArray | Function | string): RpcT & BoundRemoteFunction;
+export function func(client: Client | TemplateStringsArray | Function | string, sourceInput?: TemplateStringsArray | Function | string): RemoteFunction {
+  let _client: any
+  let _sourceInput: typeof sourceInput
+
+  if (client && (client as Client).request) {
+    _client = client
+    _sourceInput = sourceInput
+  } else {
+    _client = void 0
+    _sourceInput = client as typeof sourceInput
+  }
+
+  if (typeof _sourceInput === 'string') {
+    _sourceInput = _sourceInput
+  } else if (Array.isArray(_sourceInput)) {
+    _sourceInput = _sourceInput.join('')
+  } else if (typeof _sourceInput === 'function') {
     throw new Error(`wrong use of 'func', use the bundled babel plugin`)
   } else {
     throw new Error(`wrong use of 'func', unsupported source type`)
   }
-  return createRemoteFunc(sourceInput)
+
+  const remoteFunc = createRemoteFunc(_sourceInput)
+  if (_client) {
+    return bind(_client, remoteFunc)
+  }
+  return remoteFunc
 }
+
 
 /** Bind a remote function to a client */
 export function bind<T>(client: Client, serviceName: string): T;
