@@ -25,6 +25,17 @@ export interface BoundRemoteFunction extends Function {
   remoteFunction: RemoteFunction
 }
 
+export interface Func {
+  <T extends Function>(fn: T): T
+  (tsa: TemplateStringsArray): RemoteFunction
+  (str: string): RemoteFunction
+
+  // auto bind types
+  <T extends Function>(client: Client, fn: T): (T & BoundRemoteFunction)
+  (client: Client, tsa: TemplateStringsArray): RemoteFunction
+  (client: Client, str: string): RemoteFunction
+}
+
 const createRemoteFunc = (source: string, sourceLoc?: SourceLocation): RemoteFunction => {
   const remoteFunction = () => {
     throw new Error('Unbound remote function')
@@ -51,9 +62,7 @@ const bindServiceRpc = <T>(client: Client, serviceName: string): T => {
 }
 
 /** Create a new remote function */
-export function func(sourceInput: TemplateStringsArray | Function | string): RemoteFunction;
-export function func<RpcT>(client: Client, sourceInput: TemplateStringsArray | Function | string): RpcT & BoundRemoteFunction;
-export function func(client: Client | TemplateStringsArray | Function | string, sourceInput?: TemplateStringsArray | Function | string, sourceLoc?: SourceLocation): RemoteFunction {
+export const func: Func = (client: Client | TemplateStringsArray | Function | string, sourceInput?: TemplateStringsArray | Function | string, sourceLoc?: SourceLocation): RemoteFunction => {
   let _client: any
   let _sourceInput: typeof sourceInput
 
