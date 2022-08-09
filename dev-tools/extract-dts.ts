@@ -4,7 +4,11 @@ import globby from 'globby'
 import makeDir from 'make-dir'
 import rimraf from 'rimraf'
 
-export const extractDts = async (apiModulePath: string, destinationDir: string) => {
+export const extractDts = async (
+  apiModulePath: string,
+  destinationDir: string,
+  tscConfig: { [key: string]: any } = {}
+) => {
   const sourcePath = path.resolve(apiModulePath)
   destinationDir = path.resolve(destinationDir)
   const signatureFilePath = path.join(destinationDir, '/.extract-dts')
@@ -28,6 +32,7 @@ export const extractDts = async (apiModulePath: string, destinationDir: string) 
     noEmitOnError: false,
     declarationDir: dtsDir,
     esModuleInterop: true,
+    ...tscConfig,
   })
 
   const mainFileDestination = fileMapping[sourcePath]
