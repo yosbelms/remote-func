@@ -159,7 +159,7 @@ export class Runtime {
 
   async awaitPromise(promise: Promise<any>) {
     const result = await promise
-    // do not await chackAsync because it is resolving a promise
+    // do not await checkAsync because it is resolving a promise
     // so, it does not overtakes
     this.checkAsync()
     return result

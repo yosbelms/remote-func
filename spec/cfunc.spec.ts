@@ -105,7 +105,6 @@ describe('Cfunc', () => {
 
   // bug
   it('should allow to use Promise static methods', async () => {
-    const len = 1
     const cfunc = createCfunc({
       globalNames: ['Promise'],
       source: `async (x) => await Promise.all(x)`
@@ -115,7 +114,7 @@ describe('Cfunc', () => {
     expect(result).toEqual(param)
   })
 
-  // because terser uses sequence in minify
+  // because Terser trasforms some code to sequence on minify
   it('should accept sequence expression', async () => {
     const create = () => createCfunc({
       source: `async () => (2, 3)`

@@ -7,6 +7,8 @@ import { isValidIdentifier, createGetTrap } from './util'
 import { readOnly, getConsole } from '../server/util'
 import endent from 'endent'
 
+// see this file for attacks: https://github.com/patriksimek/vm2/blob/master/test/nodevm.js
+
 const defaultTimeout = 1 * 1000 * 60 // 1min
 const defaultMemoryLimit = 500 * 1024 * 1024 // 5Mb
 const baseLanguageSubset = '()=>{};async()=>{};'
