@@ -12,27 +12,21 @@ type Fetch = (
 ) => Promise<any>
 
 const supportsWebStreams = (
-  typeof (global as any).ReadableStream !== 'undefined'
-  && typeof (global as any).TextDecoder !== 'undefined'
+  typeof (globalThis as any).ReadableStream !== 'undefined'
+  && typeof (globalThis as any).TextDecoder !== 'undefined'
 )
 
-const handleFetchStreamResponse = (
+const handleFetchStreamResponse = async (
   response: Response,
   write: (json: string) => void,
   close: () => void,
 ) => {
-  if (response.status === 207) {
+  if (response.status === 207 && response.body) {
     const textDecoder = new TextDecoder()
-    const reader = response.body?.getReader()
-    const readChunk = (result: ReadableStreamDefaultReadResult<Uint8Array>) => {
-      if (result.done) {
-        close()
-      } else {
-        write(textDecoder.decode(result.value))
-        reader?.read().then(readChunk)
-      }
+    for await (const chunk of (response.body as any)) {
+      write(textDecoder.decode(chunk))
     }
-    reader?.read().then(readChunk)
+    close()
   }
 }
 
@@ -63,9 +57,9 @@ export interface HttpHandlerConfig {
 export const httpHandler = (_config: Partial<HttpHandlerConfig> = {}) => {
   let url = 'http://localhost/'
   let globalFetch
-  if (global && (global as any).location) {
-    url = (global as any).location
-    globalFetch = (global as any).fetch
+  if (globalThis && (globalThis as any).location) {
+    url = (globalThis as any).location
+    globalFetch = (globalThis as any).fetch
   }
 
   const config = {

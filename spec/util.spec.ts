@@ -1,5 +1,5 @@
 import 'jasmine'
-import { deepClone, readOnly } from '../server/util'
+import { deepClone } from '../server/util'
 
 describe('util', () => {
   describe('deepClone', () => {
@@ -61,20 +61,6 @@ describe('util', () => {
       const empty = cloned.filter(item => !item)
       expect(empty.length).toBe(0)
     })
-  })
-
-  describe('readOnly', () => {
-    it('should seal objects', () => {
-      const obj = readOnly({ prop: 1 })
-      obj.prop = 2
-      expect(obj.prop).toEqual(1)
-    })
-
-    it('should allow promises to work with async/await', async () => {
-      const one = await readOnly(Promise.resolve(1))
-      expect(one).toEqual(1)
-    })
-
   })
 
 })

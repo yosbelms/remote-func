@@ -1,6 +1,7 @@
 import { createEngine, Engine } from '../server/engine'
 import 'jasmine'
-import { EvalError, TimeoutError } from '../server/error'
+import { EvalError } from '../server/error'
+import { TimeoutError } from 'jailed-function/src/error'
 import { createService } from '../server/service'
 import { secs } from '../server/util'
 

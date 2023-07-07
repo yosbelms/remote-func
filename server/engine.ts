@@ -2,10 +2,10 @@ import { mins, isFunction, noop, isString, identity } from './util'
 import { EvalError } from './error'
 import { ServiceBaseContext, instantiateServices, Services } from './service'
 import { Cache } from './cache'
-import { createCfunc, Cfunc } from '../cfunc'
 import { RequestContext } from './http'
 import { parseRpcCommand, isRpcCommand } from './rpc'
 import { getPartialFuncSource, isPartialFunc } from './partial-func'
+import { JailedFunction, createJailedFunction } from 'jailed-function'
 
 export interface EngineConfig {
   /** Dictionary of services */
@@ -25,7 +25,7 @@ export interface EngineConfig {
 /** Run JavaScript query functions */
 export class Engine {
   private config: Partial<EngineConfig>
-  private cfuncCache: Cache<Cfunc>
+  private jailedFunctionCache: Cache<JailedFunction>
   private services: Services
   private servicesKeys: string[]
   private servicesModule: any
@@ -39,7 +39,7 @@ export class Engine {
     }
 
     this.readSource = this.config.source || identity
-    this.cfuncCache = new Cache()
+    this.jailedFunctionCache = new Cache()
     this.services = config.services || {}
     this.servicesKeys = Object.keys(this.services)
     const servicesPath = this.config.servicesPath
@@ -96,15 +96,18 @@ export class Engine {
   }
 
   private parseFunc(source: string, onError: Function, globals?: any, queryContext?: any) {
-    let cfunc = this.cfuncCache.get(source)
-    if (!cfunc) {
+    let jailedFunction = this.jailedFunctionCache.get(source)
+    if (!jailedFunction) {
       try {
-        cfunc = createCfunc({
+        jailedFunction = createJailedFunction({
+          readOnlyArguments: false,
+          readOnlyGlobals: false,
+          readOnlyResult: false,
           globalNames: this.servicesKeys,
           timeout: this.config.timeout,
           source,
         })
-        this.cfuncCache.set(source, cfunc)
+        this.jailedFunctionCache.set(source, jailedFunction)
       } catch (err) {
         let location = ''
         if (queryContext && queryContext.sourceLoc) {
@@ -118,7 +121,7 @@ export class Engine {
     }
 
     return (args?: any[]) => {
-      return (cfunc as Cfunc)(args, globals).catch((err: Error) => {
+      return (jailedFunction as JailedFunction)(args, globals).catch((err: Error) => {
         onError(new Error(`in query query: ${source} \n ${String(err.stack)}`))
         throw err
       })

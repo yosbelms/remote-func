@@ -1,6 +1,4 @@
-const readOnlySymbol = Symbol('read-only')
 
-export const isReadOnly = (obj: any) => !isPrimitive(obj) && obj[readOnlySymbol]
 export const identity = (a: any) => a
 export const noop = () => { }
 export const secs = (s: number) => s * 1000
@@ -12,41 +10,8 @@ export const isPrimitive = (v: any) => v == null || (!isFunction(v) && !isObject
 export const isThenable = (v: any) => v && isFunction(v.then)
 export const isArray = Array.isArray.bind(Array)
 export const isString = (v: any) => typeof v === 'string'
-export const isProduction = () => {
-  const { NODE_ENV } = process.env
-  return NODE_ENV === 'production'
-}
-export const getConsole = () => (isProduction()
-  ? { log: noop, warn: noop, error: noop }
-  : console
-)
 
 const hasOwnProperty = Object.prototype.hasOwnProperty
-
-export const readOnlyTraps = {
-  construct(target: any, args: any[]): any {
-    return readOnly(new target(...args))
-  },
-  get(target: any, prop: any, receiver: any): any {
-    const val = target[prop]
-    if (isFunction(val)) {
-      return readOnly((...args: any[]) => val.apply(target, args))
-    }
-    return readOnly(Reflect.get(target, prop, receiver))
-  },
-  set(target: any, prop: any, val: any) {
-    return val
-  },
-}
-
-export const readOnly = <T>(target: T, traps: { [k: string]: Function } = {}): T => {
-  if (isPrimitive(target) || isReadOnly(target)) {
-    return target
-  } else {
-    (target as any)[readOnlySymbol] = true
-    return new Proxy(target, { ...readOnlyTraps, ...traps })
-  }
-}
 
 export type DeepClone<T> = (
   T extends Function ? never :
@@ -62,7 +27,7 @@ export const deepClone = <T extends any, R extends DeepClone<T>>(o: T, maxDepth:
 
   // if not array or object or is null return self
   if (isFunction(o)) return void 0 as R
-  if (!isObject(o)) return o as R
+  if (!isObject(o)) return o as unknown as R
 
   // date
   if ((o as any) instanceof Date) {

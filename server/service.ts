@@ -1,4 +1,5 @@
-import { readOnly, deepClone, DeepClone, noop, isFunction } from './util'
+import { deepClone, DeepClone, noop, isFunction } from './util'
+import { readOnly } from 'jailed-function'
 
 const SERVICE = Symbol('service')
 const SERVICE_NAME = Symbol('service-name')

@@ -21,8 +21,7 @@ describe('services', () => {
 
   it('can not be mutated', () => {
     const service = instantiateServices({ exampleService })
-    service.exampleService.endpoint = () => { }
-    expect(service.exampleService.endpoint(1)).toBe(1)
+    expect(() => service.exampleService.endpoint = () => { }).toThrow()
   })
 
   describe('instanceService', () => {
