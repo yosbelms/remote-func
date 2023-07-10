@@ -1,4 +1,4 @@
-import { ReadableStreamDefaultReadValueResult } from 'stream/web'
+import { ReadableStreamDefaultReader } from 'stream/web'
 import { RequestHandlerInterface } from '../client'
 import { createParser, createStringifier } from '../json-stream'
 import { RequestMessage, ResponseMessage } from '../message'
@@ -24,16 +24,32 @@ const handleFetchStreamResponse = async (
 ) => {
   if (response.status === 207) {
     const textDecoder = new TextDecoder()
-    const reader = response.body?.getReader()
-    const readChunk = (result: ReadableStreamReadResult<Uint8Array>) => {
-      if (result.done) {
-        close()
-      } else {
+    if (response.body && (response.body as any)[Symbol.asyncIterator]) {
+      for await (const chunk of response.body as any) {
+        write(textDecoder.decode(chunk))
+      }
+      close()
+    } else {
+      const reader = response.body?.getReader() as ReadableStreamDefaultReader<Uint8Array>
+      while (true) {
+        const result = await reader?.read()
+        if (result.done) {
+          close()
+          return
+        }
         write(textDecoder.decode(result.value))
-        reader?.read().then(readChunk)
       }
     }
-    reader?.read().then(readChunk)
+
+    // const readChunk = (result: ReadableStreamDefaultReadResult<Uint8Array>) => {
+    //   if (result.done) {
+    //     close()
+    //   } else {
+    //     write(textDecoder.decode(result.value))
+    //     reader?.read().then(readChunk)
+    //   }
+    // }
+    // reader?.read().then(readChunk)
   }
 }
 
