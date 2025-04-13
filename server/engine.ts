@@ -5,7 +5,7 @@ import { Cache } from './cache'
 import { RequestContext } from './http'
 import { parseRpcCommand, isRpcCommand } from './rpc'
 import { getPartialFuncSource, isPartialFunc } from './partial-func'
-import { JailedFunction, createJailedFunction } from 'jailed-function'
+import { JailedFunction, createJailedFunction, nativeGlobalNames } from 'jailed-function'
 
 export interface EngineConfig {
   /** Dictionary of services */
@@ -96,14 +96,19 @@ export class Engine {
   }
 
   private parseFunc(source: string, onError: Function, globals?: any, queryContext?: any) {
+    const _nativeGlobalNames = [...nativeGlobalNames]
+
     let jailedFunction = this.jailedFunctionCache.get(source)
     if (!jailedFunction) {
       try {
         jailedFunction = createJailedFunction({
-          readOnlyArguments: false,
+          readOnlyArguments: true,
           readOnlyGlobals: false,
           readOnlyResult: false,
-          globalNames: this.servicesKeys,
+          availableGlobals: [
+            ..._nativeGlobalNames,
+            ...this.servicesKeys,
+          ],
           timeout: this.config.timeout,
           source,
         })

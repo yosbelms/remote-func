@@ -35,7 +35,7 @@ export const extractDts = async (
     ...tscConfig,
   })
 
-  const mainFileDestination = fileMapping[sourcePath]
+  const mainFileDestination = String(fileMapping[sourcePath])
   fs.writeFileSync(
     path.join(destinationDir, '/index.d.ts'),
     `export * from './${path.relative(
