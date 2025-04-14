@@ -1,5 +1,5 @@
-import { deepClone, DeepClone, noop, isFunction } from './util'
 import { readOnly } from 'jailed-function'
+import { deepClone, DeepClone, isFunction, isPrimitive, noop } from './util'
 
 const SERVICE = Symbol('service')
 const SERVICE_NAME = Symbol('service-name')
@@ -35,8 +35,11 @@ const instantiateService = (service: Function, ctx?: ServiceBaseContext) => {
   const serviceInstance = service(ctx)
   return readOnly(serviceInstance, {
     get(target: any, prop: any): any {
-      const endpoint = target[prop]
-      if (typeof endpoint !== 'function') {
+      const value = target[prop]
+      if (typeof prop === 'symbol' && isPrimitive(value)) {
+        return value
+      }
+      if (typeof value !== 'function') {
         throw new Error(`'${prop}' is not a function`)
       }
       return (...args: any[]) => {
@@ -46,7 +49,7 @@ const instantiateService = (service: Function, ctx?: ServiceBaseContext) => {
           endpoint: prop,
           args
         })
-        return deepClone(endpoint.apply(serviceInstance, args))
+        return deepClone(value.apply(serviceInstance, args))
       }
     }
   })

@@ -20,6 +20,7 @@ export interface EngineConfig {
   timeout: number,
   /** Whether display query errors or not */
   displayErrors: boolean
+  enableConsoleGlobal: boolean
 }
 
 /** Run JavaScript query functions */
@@ -35,6 +36,7 @@ export class Engine {
     this.config = {
       timeout: mins(1),
       displayErrors: true,
+      enableConsoleGlobal: false,
       ...config,
     }
 
@@ -92,17 +94,26 @@ export class Engine {
       return arg
     }))
 
-    return parsedFunc(_args)
+    try {
+      return parsedFunc(_args)
+    } catch (err) {
+      onError(err)
+      throw err
+    }
   }
 
   private parseFunc(source: string, onError: Function, globals?: any, queryContext?: any) {
-    const _nativeGlobalNames = [...nativeGlobalNames]
+    let _nativeGlobalNames = [...nativeGlobalNames]
 
-    let jailedFunction = this.jailedFunctionCache.get(source)
+    if (this.config.enableConsoleGlobal) {
+      _nativeGlobalNames = _nativeGlobalNames.filter(name => name !== 'console')
+    }
+
+    let jailedFunction = this.jailedFunctionCache.get(source) as JailedFunction
     if (!jailedFunction) {
       try {
         jailedFunction = createJailedFunction({
-          readOnlyArguments: true,
+          readOnlyArguments: false,
           readOnlyGlobals: false,
           readOnlyResult: false,
           availableGlobals: [
@@ -125,11 +136,13 @@ export class Engine {
       }
     }
 
-    return (args?: any[]) => {
-      return (jailedFunction as JailedFunction)(args, globals).catch((err: Error) => {
-        onError(new Error(`in query query: ${source} \n ${String(err.stack)}`))
+    return async (args?: any[]) => {
+      try {
+        return await Promise.resolve(jailedFunction(args, globals))
+      } catch (err) {
+        onError(new Error(`in query query: ${source} \n ${String((err as Error).stack)}`))
         throw err
-      })
+      }
     }
   }
 
