@@ -1,6 +1,6 @@
 {
   "name": "remote-func",
-  "version": "0.7.2",
+  "version": "0.8.2",
   "description": "JavaScript as the query language for your API",
   "main": "client/index.js",
   "repository": "https://github.com/yosbelms/remote-func",
@@ -34,7 +34,7 @@
     "@types/koa-compose": "^3.2.5",
     "endent": "^2.1.0",
     "globby": "^11.1.0",
-    "jailed-function": "^1.5.12",
+    "jailed-function": "^1.7.13",
     "koa-compose": "^4.1.0",
     "make-dir": "^4.0.0",
     "mimic-fn": "^3.1.0",

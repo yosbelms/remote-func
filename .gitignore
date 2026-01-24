@@ -5,3 +5,4 @@ node_modules/
 .nyc_output/
 shrinkwrap.yaml
 yarn-error.log
+.DS_Store
