@@ -50,7 +50,7 @@
     "@types/globby": "^9.1.0",
     "@types/jasmine": "^4.3.5",
     "@types/make-dir": "^2.1.0",
-    "@types/node": "^20.4.0",
+    "@types/node": "^25.1.0",
     "@types/node-fetch": "^2.5.10",
     "@types/rimraf": "^3.0.2",
     "@types/sade": "^1.7.4",
@@ -64,7 +64,6 @@
     "rimraf": "^3.0.2",
     "sane": "^5.0.1",
     "ts-node": "^10.4.0",
-    "typedoc": "^0.22.10",
     "typescript": "^5.9.3",
     "updates": "^12.2.2"
   },
