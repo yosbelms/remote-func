@@ -24,7 +24,7 @@ export const extractDts = async (
   // Pass the raw options object; the compile function will handle conversion
   const fileMapping = compile([sourcePath], {
     target: 'ES2019',
-    lib: ['lib.es2019.full.d.ts'],
+    lib: ['ES2019', 'DOM'],
     strict: false,
     declaration: true,
     skipLibCheck: true,
