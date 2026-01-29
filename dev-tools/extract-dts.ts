@@ -9,6 +9,7 @@ export const extractDts = async (
   destinationDir: string,
   tscConfig: { [key: string]: any } = {}
 ) => {
+  const ts = require('typescript')
   const sourcePath = path.resolve(apiModulePath)
   destinationDir = path.resolve(destinationDir)
   const signatureFilePath = path.join(destinationDir, '/.extract-dts')
@@ -18,25 +19,43 @@ export const extractDts = async (
   }
 
   const dtsDir = await makeDir(path.join(destinationDir, '/dts'))
-
   fs.writeFileSync(signatureFilePath, '')
 
-  // Pass the raw options object; the compile function will handle conversion
-  const fileMapping = compile([sourcePath], {
-    target: 'ES2019',
-    lib: ['ES2019', 'DOM'],
-    strict: false,
-    declaration: true,
-    skipLibCheck: true,
-    allowJs: true,
-    emitDeclarationOnly: true,
-    noEmitOnError: false,
-    declarationDir: dtsDir,
-    esModuleInterop: true,
-    ...tscConfig,
-  })
+  // 1. Load your actual project tsconfig to get module resolution rules
+  const configPath = ts.findConfigFile(process.cwd(), ts.sys.fileExists, "tsconfig.json")
+  const configFile = configPath ? ts.readConfigFile(configPath, ts.sys.readFile).config : {}
+
+  // 2. Merge your project config with the necessary overrides for DTS extraction
+  const parsedConfig = ts.parseJsonConfigFileContent(
+    {
+      ...configFile,
+      compilerOptions: {
+        ...configFile.compilerOptions,
+        target: 'ES2020',
+        module: 'NodeNext',
+        moduleResolution: 'NodeNext',
+        lib: ['ES2020', 'DOM'],
+        declaration: true,
+        emitDeclarationOnly: true,
+        declarationDir: dtsDir,
+        skipLibCheck: true, // Fixes the Buffer/Uint8Array error
+        noEmitOnError: false,
+        allowJs: true,
+        ...tscConfig,
+      }
+    },
+    ts.sys,
+    process.cwd()
+  )
+
+  // 3. Run the compiler with the correctly parsed options
+  const fileMapping = compile([sourcePath], parsedConfig.options)
 
   const mainFileDestination = String(fileMapping[sourcePath])
+  if (!mainFileDestination || mainFileDestination === 'undefined') {
+    throw new Error(`Failed to generate .d.ts for ${sourcePath}. Check compiler errors above.`)
+  }
+
   fs.writeFileSync(
     path.join(destinationDir, '/index.d.ts'),
     `export * from './${path.relative(
@@ -57,7 +76,7 @@ export const extractDts = async (
   })
 }
 
-const compile = (fileNames: string[], rawOptions: any, _log: boolean = true): { [source: string]: string } => {
+const compile = (fileNames: string[], options: any, _log: boolean = true): { [source: string]: string } => {
   let ts: any
   try {
     ts = require('typescript')
@@ -65,22 +84,9 @@ const compile = (fileNames: string[], rawOptions: any, _log: boolean = true): { 
     throw new Error('Please add TypeScript as dependency')
   }
 
-  // CONVERSION STEP: Convert string values (like "ES2019") to TypeScript Enums
-  const { options, errors } = ts.convertCompilerOptionsFromJson(
-    rawOptions, 
-    process.cwd()
-  );
-
-  if (errors.length > 0) {
-    const formatHost = {
-      getCanonicalFileName: (path: string) => path,
-      getCurrentDirectory: ts.sys.getCurrentDirectory,
-      getNewLine: () => ts.sys.newLine,
-    };
-    throw new Error(ts.formatDiagnostics(errors, formatHost));
-  }
-
   const log = _log ? console.log.bind(console) : (...args: any[]) => { }
+  
+  // Create host using the ALREADY PARSED options
   const host = ts.createCompilerHost(options)
   const hostGetSourceFile = host.getSourceFile.bind(host)
   const hostWriteFile = host.writeFile.bind(host)
@@ -97,19 +103,19 @@ const compile = (fileNames: string[], rawOptions: any, _log: boolean = true): { 
 
   log(`\nImporting from: ${host.getCurrentDirectory()}\n`)
   log(`Sources:`)
+  
   host.getSourceFile = (fileName: string, ...restArgs: any[]) => {
     log(`${getDisplayPath(fileName)}`)
     return hostGetSourceFile(fileName, ...restArgs)
   }
 
-  host.writeFile = (...args: any[]) => {
-    const [fileName, _, __, ___, sourceFiles] = args
-    const sourceFile = sourceFiles[0]
-    if (sourceFile) {
-      fileMapping[sourceFile.fileName] = fileName
+  host.writeFile = (fileName: string, data: string, writeByteOrderMark: boolean, onError?: (message: string) => void, sourceFiles?: readonly any[]) => {
+    if (sourceFiles && sourceFiles.length > 0) {
+      const sourceFile = sourceFiles[0]
+      fileMapping[path.resolve(sourceFile.fileName)] = path.resolve(fileName)
       log(`${getDisplayPath(fileName)}`)
     }
-    return hostWriteFile(...args)
+    return hostWriteFile(fileName, data, writeByteOrderMark, onError, sourceFiles)
   }
 
   const program = ts.createProgram(fileNames, options, host)
