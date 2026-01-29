@@ -21,6 +21,7 @@ export const extractDts = async (
 
   fs.writeFileSync(signatureFilePath, '')
 
+  // Pass the raw options object; the compile function will handle conversion
   const fileMapping = compile([sourcePath], {
     target: 'ES2019',
     lib: ['lib.es2019.full.d.ts'],
@@ -56,13 +57,29 @@ export const extractDts = async (
   })
 }
 
-const compile = (fileNames: string[], options: any, _log: boolean = true): { [source: string]: string } => {
+const compile = (fileNames: string[], rawOptions: any, _log: boolean = true): { [source: string]: string } => {
   let ts: any
   try {
     ts = require('typescript')
   } catch (_) {
     throw new Error('Please add TypeScript as dependency')
   }
+
+  // CONVERSION STEP: Convert string values (like "ES2019") to TypeScript Enums
+  const { options, errors } = ts.convertCompilerOptionsFromJson(
+    rawOptions, 
+    process.cwd()
+  );
+
+  if (errors.length > 0) {
+    const formatHost = {
+      getCanonicalFileName: (path: string) => path,
+      getCurrentDirectory: ts.sys.getCurrentDirectory,
+      getNewLine: () => ts.sys.newLine,
+    };
+    throw new Error(ts.formatDiagnostics(errors, formatHost));
+  }
+
   const log = _log ? console.log.bind(console) : (...args: any[]) => { }
   const host = ts.createCompilerHost(options)
   const hostGetSourceFile = host.getSourceFile.bind(host)
